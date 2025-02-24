@@ -1,47 +1,87 @@
 package com.example.pillreminder
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.pillreminder.ui.theme.PillReminderTheme
+import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import java.time.DayOfWeek
+import java.time.LocalTime
+
+val sampleDailyReminder1 = Reminder(
+    "Vitamin A",
+    LocalTime.of(10, 22),
+    DayOfWeek.entries
+)
+
+val sampleDailyReminder2 = Reminder(
+    "Vitamin B",
+    LocalTime.of(9, 0),
+    DayOfWeek.entries
+)
+
+val sampleDailyReminder3 = Reminder(
+    "Vitamin C",
+    LocalTime.of(16, 0),
+    DayOfWeek.entries
+)
+
+val sampleWeeklyReminder = Reminder(
+    "Aspirin",
+    LocalTime.of(12, 0),
+    listOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)
+)
+
+val reminders = listOf(sampleDailyReminder1, sampleDailyReminder2, sampleDailyReminder3, sampleWeeklyReminder)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        scheduleReminder(this, "Vitamin C", LocalTime.of(9, 30))
+
         setContent {
-            PillReminderTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+            PillReminderScreen(reminders = reminders)
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = { testSendNotification(this, "Vitamin C") }) {
+                Text("Test Notification")
             }
         }
+        createNotificationChannel(this)
+
+
+        testSendNotification(this, "Test Pill")
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun testSendNotification(context: Context, pillName: String) {
+    val notification = NotificationCompat.Builder(context, "pill_reminder_channel")
+        .setSmallIcon(android.R.drawable.ic_dialog_info)
+        .setContentTitle("Pill Reminder")
+        .setContentText("Time to take your $pillName!")
+        .setPriority(NotificationCompat.PRIORITY_HIGH)
+        .setAutoCancel(true)
+        .build()
+
+    val notificationManager = NotificationManagerCompat.from(context)
+    if (ActivityCompat.checkSelfPermission(
+            context,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) != PackageManager.PERMISSION_GRANTED
+    ) {
+        return
+    }
+    notificationManager.notify(System.currentTimeMillis().toInt(), notification)
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    PillReminderTheme {
-        Greeting("Android")
-    }
-}
