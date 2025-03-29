@@ -15,19 +15,16 @@ import androidx.compose.ui.unit.sp
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun MainScreenContent(reminders: List<Reminder>) {
-    Column(modifier = Modifier.padding(16.dp)) {
-        CalendarComponent()
-        LazyColumn {
-            items(reminders) { reminder ->
-                InstanceReminderItem(reminder)
-            }
+fun PillsScreen(reminders: List<Reminder>) {
+    LazyColumn {
+        items(reminders) { reminder ->
+            ReminderItem(reminder)
         }
     }
 }
 
 @Composable
-fun InstanceReminderItem(reminder: Reminder) {
+fun ReminderItem(reminder: Reminder) {
     Card(
         modifier = Modifier
             .fillMaxSize()
@@ -41,6 +38,12 @@ fun InstanceReminderItem(reminder: Reminder) {
             )
             Text(
                 text = "Time: ${reminder.time.format(DateTimeFormatter.ofPattern("hh:mm a"))}",
+                fontSize = 16.sp
+            )
+            Text(
+                text = "Days: ${
+                    reminder.daysOfWeek.joinToString(", ") { it.name.take(3) }
+                }",
                 fontSize = 16.sp
             )
         }
