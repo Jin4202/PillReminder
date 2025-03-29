@@ -52,11 +52,11 @@ class MainActivity : ComponentActivity() {
         scheduleReminder(this, "Vitamin C", LocalTime.of(9, 30))
 
         setContent {
-            PillReminderScreen(reminders = reminders)
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = { testSendNotification(this, "Vitamin C") }) {
-                Text("Test Notification")
-            }
+            MainScreen(reminders = reminders)
+//            Spacer(modifier = Modifier.height(16.dp))
+//            Button(onClick = { testSendNotification(this, "Vitamin C") }) {
+//                Text("Test Notification")
+//            }
         }
         createNotificationChannel(this)
 
