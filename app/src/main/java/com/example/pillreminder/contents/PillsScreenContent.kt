@@ -1,4 +1,4 @@
-package com.example.pillreminder
+package com.example.pillreminder.contents
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pillreminder.reminder.Reminder
 import java.time.format.DateTimeFormatter
 
 @Composable

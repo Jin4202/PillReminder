@@ -1,4 +1,4 @@
-package com.example.pillreminder
+package com.example.pillreminder.contents
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar

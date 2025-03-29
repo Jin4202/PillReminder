@@ -8,6 +8,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.pillreminder.contents.BottomNavItem
+import com.example.pillreminder.contents.BottomNavigationBar
+import com.example.pillreminder.contents.MainScreenContent
+import com.example.pillreminder.contents.PillsScreen
+import com.example.pillreminder.contents.ProfileScreen
+import com.example.pillreminder.reminder.Reminder
 
 @Composable
 fun MainScreen(reminders: List<Reminder>) {

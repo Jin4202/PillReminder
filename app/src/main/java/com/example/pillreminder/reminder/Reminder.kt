@@ -1,4 +1,4 @@
-package com.example.pillreminder
+package com.example.pillreminder.reminder
 
 import java.time.DayOfWeek
 import java.time.LocalTime

@@ -1,4 +1,4 @@
-package com.example.pillreminder
+package com.example.pillreminder.contents
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
