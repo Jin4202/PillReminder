@@ -6,5 +6,5 @@ import java.time.LocalTime
 data class Reminder(
     val pillName: String,
     val time: LocalTime,
-    val daysOfWeek: List<DayOfWeek>
+    val daysOfWeek: Set<DayOfWeek>
 )
