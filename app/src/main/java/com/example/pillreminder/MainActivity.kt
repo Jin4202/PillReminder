@@ -11,15 +11,27 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.pillreminder.reminder.Reminder
-import com.example.pillreminder.reminder.ReminderBroadcastReceiver
-import com.example.pillreminder.reminder.createNotificationChannel
-import com.example.pillreminder.reminder.scheduleReminder
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.pillreminder.model.nav.BottomNavItem
+import com.example.pillreminder.card.BottomNavigationBar
+import com.example.pillreminder.model.reminder.Reminder
+import com.example.pillreminder.model.reminder.ReminderBroadcastReceiver
+import com.example.pillreminder.model.reminder.createNotificationChannel
+import com.example.pillreminder.model.reminder.scheduleReminder
+import com.example.pillreminder.screen.PillsScreen
+import com.example.pillreminder.screen.ProfileScreen
+import com.example.pillreminder.screen.ReminderScreen
 import java.time.DayOfWeek
 import java.time.LocalTime
 
@@ -71,6 +83,40 @@ class MainActivity : ComponentActivity() {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
             }
+        }
+    }
+}
+
+@Composable
+fun MainScreen(reminders: List<Reminder>) {
+    val navController = rememberNavController()
+
+    Scaffold(
+        bottomBar = { BottomNavigationBar(navController = navController) }
+    ) { paddingValues ->
+        NavigationGraph(
+            navController = navController,
+            modifier = Modifier.padding(paddingValues),
+            reminders = reminders
+        )
+    }
+}
+
+@Composable
+fun NavigationGraph(
+    navController: NavHostController,
+    modifier: Modifier,
+    reminders: List<Reminder>
+) {
+    NavHost(navController, startDestination = BottomNavItem.Main.route, modifier = modifier) {
+        composable(BottomNavItem.Main.route) {
+            ReminderScreen(reminders = reminders)
+        }
+        composable(BottomNavItem.Pills.route) {
+            PillsScreen(reminders = reminders)
+        }
+        composable(BottomNavItem.Profile.route) {
+            ProfileScreen()
         }
     }
 }

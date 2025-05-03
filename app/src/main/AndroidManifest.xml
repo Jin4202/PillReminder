@@ -27,7 +27,7 @@
             </intent-filter>
         </activity>
         <receiver
-            android:name=".reminder.ReminderBroadcastReceiver"
+            android:name=".model.reminder.ReminderBroadcastReceiver"
             android:exported="false" />
     </application>
 

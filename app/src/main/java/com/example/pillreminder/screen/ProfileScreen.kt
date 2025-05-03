@@ -1,4 +1,4 @@
-package com.example.pillreminder.contents
+package com.example.pillreminder.screen
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

@@ -1,4 +1,4 @@
-package com.example.pillreminder.contents
+package com.example.pillreminder.card
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

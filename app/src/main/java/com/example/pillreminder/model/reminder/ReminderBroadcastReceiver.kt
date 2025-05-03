@@ -1,4 +1,4 @@
-package com.example.pillreminder.reminder
+package com.example.pillreminder.model.reminder
 
 import android.Manifest
 import android.R

@@ -1,4 +1,4 @@
-package com.example.pillreminder.contents
+package com.example.pillreminder.card
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.pillreminder.model.nav.BottomNavItem
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {
