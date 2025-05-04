@@ -27,6 +27,7 @@ import com.example.pillreminder.model.nav.BottomNavItem
 import com.example.pillreminder.card.BottomNavigationBar
 import com.example.pillreminder.model.reminder.Reminder
 import com.example.pillreminder.model.reminder.ReminderBroadcastReceiver
+import com.example.pillreminder.model.reminder.ReminderManager
 import com.example.pillreminder.model.reminder.createNotificationChannel
 import com.example.pillreminder.model.reminder.scheduleReminder
 import com.example.pillreminder.screen.PillsScreen
@@ -72,8 +73,11 @@ class MainActivity : ComponentActivity() {
             reminders.forEachIndexed { index, reminder ->
                 scheduleReminder(this, reminder.pillName, reminder.time, reminder.daysOfWeek, index)
             }
-            MainScreen(reminders = reminders)
-            TestReminderButton(this)
+            for (reminder in reminders) {
+                ReminderManager.getInstance().addReminder(reminder)
+            }
+            MainScreen()
+            //TestReminderButton(this)
         }
         createNotificationChannel(this)
     }
@@ -88,7 +92,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(reminders: List<Reminder>) {
+fun MainScreen() {
     val navController = rememberNavController()
 
     Scaffold(
@@ -96,8 +100,7 @@ fun MainScreen(reminders: List<Reminder>) {
     ) { paddingValues ->
         NavigationGraph(
             navController = navController,
-            modifier = Modifier.padding(paddingValues),
-            reminders = reminders
+            modifier = Modifier.padding(paddingValues)
         )
     }
 }
@@ -105,15 +108,14 @@ fun MainScreen(reminders: List<Reminder>) {
 @Composable
 fun NavigationGraph(
     navController: NavHostController,
-    modifier: Modifier,
-    reminders: List<Reminder>
+    modifier: Modifier
 ) {
     NavHost(navController, startDestination = BottomNavItem.Main.route, modifier = modifier) {
         composable(BottomNavItem.Main.route) {
-            ReminderScreen(reminders = reminders)
+            ReminderScreen()
         }
         composable(BottomNavItem.Pills.route) {
-            PillsScreen(reminders = reminders)
+            PillsScreen()
         }
         composable(BottomNavItem.Profile.route) {
             ProfileScreen()
