@@ -2,7 +2,6 @@ package com.example.pillreminder.model.reminder
 
 import androidx.compose.runtime.remember
 import java.time.DayOfWeek
-import java.time.LocalDate
 
 class ReminderManager private constructor() {
     private val reminders = mutableListOf<Reminder>()

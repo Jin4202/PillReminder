@@ -15,8 +15,9 @@ import java.time.format.DateTimeFormatter
 
 
 @Composable
-fun ReminderItem(reminder: Reminder) {
+fun ReminderItem(reminder: Reminder, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxSize()
             .padding(8.dp)

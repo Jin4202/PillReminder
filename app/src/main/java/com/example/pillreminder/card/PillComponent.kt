@@ -14,8 +14,9 @@ import com.example.pillreminder.model.reminder.Reminder
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun PillItem(reminder: Reminder) {
+fun PillItem(reminder: Reminder, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxSize()
             .padding(8.dp)
