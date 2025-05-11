@@ -41,15 +41,17 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import com.example.pillreminder.model.reminder.ReminderManager
 import kotlinx.coroutines.launch
 
 @Composable
-fun PillInformationCard(reminder : Reminder, showCard: Boolean, onDismiss: () -> Unit) {
+fun PillInformationCard(reminder : Reminder, showCard: Boolean, onDismiss: () -> Unit, onUpdate: () -> Unit) {
     if (showCard) {
         // Fullscreen background to catch outside clicks
         Box(
@@ -75,7 +77,14 @@ fun PillInformationCard(reminder : Reminder, showCard: Boolean, onDismiss: () ->
                     },
                 elevation = CardDefaults.cardElevation(8.dp)
             ) {
-                PillInformationEditCard(reminder, onDismiss, onSave = {})
+                PillInformationEditCard(
+                    reminder,
+                    onDismiss,
+                    onSave = {
+                        onUpdate()
+                        onDismiss()
+                    }
+                )
             }
         }
     }
@@ -83,24 +92,40 @@ fun PillInformationCard(reminder : Reminder, showCard: Boolean, onDismiss: () ->
 
 @Composable
 fun PillInformationEditCard(reminder: Reminder, onDismiss: () -> Unit, onSave: () -> Unit) {
-    var selectedDays by remember { mutableStateOf(listOf<Int>()) }
-
-    val pillName: String = reminder.pillName
-    val time: LocalTime = reminder.time
-    val daysOfWeek: Set<DayOfWeek> = reminder.daysOfWeek
+    var pillName by remember { mutableStateOf(reminder.pillName) }
+    var selectedDays by remember {
+        mutableStateOf(reminder.daysOfWeek.map { it.value % 7 })
+    }
+    var selectedHour by remember { mutableStateOf(reminder.getHour12()) }
+    var selectedMinute by remember { mutableStateOf(reminder.getMinute()) }
+    var selectedPeriod by remember { mutableStateOf(reminder.getPeriod()) }
 
     Column(modifier = Modifier.padding(16.dp)) {
-        Text(pillName)
-
-        DaySelector(selectedDays, onDayToggle = { day ->
-            selectedDays = if (selectedDays.contains(day)) {
-                selectedDays - day
-            } else {
-                selectedDays + day
+        EditablePillName(pillName = pillName) { newName ->
+            pillName = newName
+        }
+        DaySelector(
+            selectedDays = selectedDays,
+            onDayToggle = { day ->
+                selectedDays = if (selectedDays.contains(day)) {
+                    selectedDays - day
+                } else {
+                    selectedDays + day
+                }
             }
-        })
-        TimeSelector()
-        AlarmSelector()
+        )
+        TimeSelector(
+            initialHour = selectedHour,
+            initialMinute = selectedMinute,
+            initialPeriod = selectedPeriod,
+            onTimeChange = { hour, minute, period ->
+                selectedHour = hour
+                selectedMinute = minute
+                selectedPeriod = period
+            }
+        )
+
+        //AlarmSelector()
 
         Row(
             modifier = Modifier
@@ -109,9 +134,39 @@ fun PillInformationEditCard(reminder: Reminder, onDismiss: () -> Unit, onSave: (
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Button(onClick = onDismiss) { Text("Cancel") }
-            Button(onClick = onSave) { Text("Save") }
+            Button(onClick = {
+                val updatedPillName = pillName
+                val updatedTime = LocalTime.of(
+                    if (selectedPeriod == "AM") selectedHour % 12 else (selectedHour % 12) + 12,
+                    selectedMinute
+                )
+                val updatedDays = selectedDays.map { DayOfWeek.of(it + 1) }.toSet()
+                ReminderManager.getInstance().updateReminder(reminder.getId(), updatedPillName, updatedTime, updatedDays)
+                onSave()
+            }) { Text("Save") }
         }
     }
+}
+
+@Composable
+fun EditablePillName(
+    pillName: String,
+    onNameChange: (String) -> Unit
+) {
+    var text by remember { mutableStateOf(pillName) }
+
+    OutlinedTextField(
+        value = text,
+        onValueChange = {
+            text = it
+            onNameChange(it)
+        },
+        label = { Text("Pill Name") },
+        singleLine = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    )
 }
 
 @Composable

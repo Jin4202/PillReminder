@@ -22,6 +22,7 @@ import java.time.LocalDate
 
 @Composable
 fun ReminderScreen() {
+    var reminders by remember { mutableStateOf(ReminderManager.getInstance().getReminders()) }
     var selectedDayOfWeek by remember { mutableStateOf(LocalDate.now().dayOfWeek) }
     var selectedReminder by remember { mutableStateOf(Reminder("Not Selected", java.time.LocalTime.now(), emptySet())) }
     var showCard by remember { mutableStateOf(false) }
@@ -32,7 +33,7 @@ fun ReminderScreen() {
         Column(modifier = Modifier.padding(16.dp)) {
             CalendarComponent(onSelectedDayChange = { selectedDayOfWeek = it })
             LazyColumn {
-                items(ReminderManager.getInstance().getRemindersForDayOfWeek(selectedDayOfWeek)) { reminder ->
+                items(reminders, key = { it.getId() }) { reminder ->
                     ReminderItem(reminder, onClick = {
                         selectedReminder = reminder
                         showCard = true
@@ -40,6 +41,11 @@ fun ReminderScreen() {
                 }
             }
         }
-        PillInformationCard(reminder = selectedReminder, showCard = showCard, onDismiss = { showCard = false })
+        PillInformationCard(
+            reminder = selectedReminder,
+            showCard = showCard,
+            onDismiss = { showCard = false },
+            onUpdate = {reminders = ReminderManager.getInstance().getReminders()}
+        )
     }
 }
