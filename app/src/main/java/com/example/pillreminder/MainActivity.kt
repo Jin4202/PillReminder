@@ -30,6 +30,7 @@ import com.example.pillreminder.model.reminder.ReminderBroadcastReceiver
 import com.example.pillreminder.model.reminder.ReminderManager
 import com.example.pillreminder.model.reminder.createNotificationChannel
 import com.example.pillreminder.model.reminder.scheduleReminder
+import com.example.pillreminder.screen.CameraScreen
 import com.example.pillreminder.screen.PillsScreen
 import com.example.pillreminder.screen.ProfileScreen
 import com.example.pillreminder.screen.ReminderScreen
@@ -38,7 +39,7 @@ import java.time.LocalTime
 
 val sampleDailyReminder1 = Reminder(
     "Vitamin A",
-    LocalTime.of(10, 22),
+    LocalTime.of(10, 30),
     DayOfWeek.entries.toSet()
 )
 
@@ -111,6 +112,9 @@ fun NavigationGraph(
     modifier: Modifier
 ) {
     NavHost(navController, startDestination = BottomNavItem.Main.route, modifier = modifier) {
+        composable(BottomNavItem.Camera.route) {
+            CameraScreen()
+        }
         composable(BottomNavItem.Main.route) {
             ReminderScreen()
         }

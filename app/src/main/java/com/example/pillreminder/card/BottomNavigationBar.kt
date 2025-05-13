@@ -14,6 +14,7 @@ import com.example.pillreminder.model.nav.BottomNavItem
 @Composable
 fun BottomNavigationBar(navController: NavController) {
     val items = listOf(
+        BottomNavItem.Camera,
         BottomNavItem.Main,
         BottomNavItem.Pills,
         BottomNavItem.Profile
