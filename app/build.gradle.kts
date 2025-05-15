@@ -70,6 +70,7 @@ dependencies {
 
     implementation(libs.okhttp)
     implementation(libs.json)
+    implementation(libs.generativeai)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

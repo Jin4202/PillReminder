@@ -1,24 +1,26 @@
 package com.example.pillreminder.model.gemini
 
-import android.util.Base64
-import android.util.Log
+import android.graphics.BitmapFactory
+import com.example.pillreminder.BuildConfig
 import com.example.pillreminder.model.reminder.Reminder
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
+import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.content
 import org.json.JSONObject
 import java.time.DayOfWeek
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-class GeminiRepository(private val apiKey: String) {
+class GeminiRepository() {
+    suspend fun analyzeImage(imageBytes: ByteArray): Reminder? {
+        val generativeModel =
+            GenerativeModel(
+                modelName = "gemini-1.5-flash",
+                apiKey = BuildConfig.GEMINI_API_KEY)
 
-    suspend fun analyzeImage(imageBytes: ByteArray): Reminder? = withContext(Dispatchers.IO) {
-        val base64 = Base64.encodeToString(imageBytes, Base64.NO_WRAP)
-        val promptText = """
+        val bitmap_image = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+
+
+        val prompt = """
             This image shows a supplement or prescription label.
             Extract and return the information in exactly the following JSON format:
             {
@@ -37,95 +39,46 @@ class GeminiRepository(private val apiKey: String) {
             Then, add general safety cautions based on the product name and type (e.g., probiotics).
             Always return at least one caution.
             Return only the valid JSON object.
-            """.trimIndent()
+            """
+        val requestInput = content {image(bitmap_image); text(prompt)}
+        val response = generativeModel.generateContent(requestInput)
+        val outputText = response.text ?: return null
+        val jsonText = outputText
+            .trim()
+            .removePrefix("```json")
+            .removeSuffix("```")
+            .trim()
+        val cleanJson = JSONObject(jsonText)
 
-        val inlineData = JSONObject()
-        inlineData.put("mime_type", "image/jpeg")
-        inlineData.put("data", base64)
-
-        val part1 = JSONObject()
-        part1.put("inline_data", inlineData)
-
-        val part2 = JSONObject()
-        part2.put("text", promptText)
-
-        val partsArray = org.json.JSONArray()
-        partsArray.put(part1)
-        partsArray.put(part2)
-
-        val contentsObject = JSONObject()
-        contentsObject.put("parts", partsArray)
-
-        val contentsArray = org.json.JSONArray()
-        contentsArray.put(contentsObject)
-
-        val generationConfig = JSONObject()
-        generationConfig.put("temperature", 0.2)
-
-        val payload = JSONObject()
-        payload.put("contents", contentsArray)
-        payload.put("generation_config", generationConfig)
-        val jsonBody = payload.toString()
-
-        val client = OkHttpClient()
-        val mediaType = "application/json".toMediaType()
-        val body = jsonBody.toRequestBody(mediaType)
-        val request = Request.Builder()
-            .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey")
-            .post(body)
-            .build()
-
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string() ?: return@withContext null
-
-        try {
-            val text = JSONObject(responseBody)
-                .getJSONArray("candidates")
-                .getJSONObject(0)
-                .getJSONObject("content")
-                .getJSONArray("parts")
-                .getJSONObject(0)
-                .getString("text")
-            val rawJson = text
-                .trim()
-                .removePrefix("```json")
-                .removePrefix("```")
-                .removeSuffix("```")
-                .trim()
-            Log.d("JSON", "JSON: $rawJson")
-            val cleanJson = JSONObject(rawJson)
-            val pillName = cleanJson.optString("name")
-            var time = LocalTime.of(8,0)
-            if (!cleanJson.optString("time").trim().equals("null")) {
-                time = parseTime(cleanJson.optString("time"))
-            }
-            val daysOfWeek = parseDays(
-                List(cleanJson.optJSONArray("daysOfWeek")?.length() ?: 0) {
-                    cleanJson.getJSONArray("daysOfWeek").getString(it)
-                }
-            )
-            val cautions = List(cleanJson.optJSONArray("cautions")?.length() ?: 0) {
-                cleanJson.getJSONArray("cautions").getString(it)
-            }
-            return@withContext Reminder(
-                pillName = pillName,
-                time = time,
-                daysOfWeek = daysOfWeek,
-                cautions = cautions
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return@withContext null
+        val pillName = cleanJson.optString("name")
+        var time = LocalTime.of(8,0)
+        if (!cleanJson.optString("time").trim().equals("null")) {
+            time = parseStringToTime(cleanJson.optString("time"))
         }
+        val daysOfWeek = parseStringToDays(
+            List(cleanJson.optJSONArray("daysOfWeek")?.length() ?: 0) {
+                cleanJson.getJSONArray("daysOfWeek").getString(it)
+            }
+        )
+        val cautions = List(cleanJson.optJSONArray("cautions")?.length() ?: 0) {
+            cleanJson.getJSONArray("cautions").getString(it)
+        }
+
+        return Reminder(
+            pillName = pillName,
+            time = time,
+            daysOfWeek = daysOfWeek,
+            cautions = cautions
+        )
     }
 }
 
-fun parseTime(timeString: String): LocalTime {
+fun parseStringToTime(timeString: String): LocalTime {
     val formatter = DateTimeFormatter.ofPattern("H:mm")
     return LocalTime.parse(timeString, formatter)
 }
 
-fun parseDays(days: List<String>): Set<DayOfWeek> {
+fun parseStringToDays(days: List<String>): Set<DayOfWeek> {
     return days.mapNotNull { dayName ->
         try {
             DayOfWeek.valueOf(dayName.uppercase())
