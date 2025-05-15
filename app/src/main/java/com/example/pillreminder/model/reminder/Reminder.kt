@@ -3,10 +3,11 @@ package com.example.pillreminder.model.reminder
 import java.time.DayOfWeek
 import java.time.LocalTime
 
-class Reminder (
+class Reminder(
     var pillName: String,
     var time: LocalTime,
     var daysOfWeek: Set<DayOfWeek>,
+    var cautions: List<String> = emptyList(),
     private val id: Int = generate_reminder_ID()
 ) {
     companion object {

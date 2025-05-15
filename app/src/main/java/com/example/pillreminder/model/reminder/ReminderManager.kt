@@ -1,6 +1,5 @@
 package com.example.pillreminder.model.reminder
 
-import androidx.compose.runtime.remember
 import java.time.DayOfWeek
 import java.time.LocalTime
 
@@ -41,7 +40,7 @@ class ReminderManager private constructor() {
     fun updateReminder(id: Int, newName: String, newTime: LocalTime, newDays: Set<DayOfWeek>) {
         val index = reminders.indexOfFirst { it.getId() == id }
         if (index != -1) {
-            val newReminder = Reminder(newName, newTime, newDays, id)
+            val newReminder = Reminder(newName, newTime, newDays)
             reminders[index] = newReminder
         }
     }
