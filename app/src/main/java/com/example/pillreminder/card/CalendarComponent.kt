@@ -5,7 +5,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -33,61 +35,68 @@ import kotlin.text.replaceFirstChar
 import kotlin.text.uppercase
 
 @Composable
-fun CalendarComponent(onSelectedDayChange : (DayOfWeek) -> Unit) {
+fun CalendarComponent(onSelectedDayChange: (DayOfWeek) -> Unit) {
     var selectedYear by remember { mutableIntStateOf(YearMonth.now().year) }
     var selectedMonth by remember { mutableStateOf(YearMonth.now().month) }
+    var selectedDay by remember { mutableIntStateOf(LocalDate.now().dayOfMonth) }  // <--- 중요
+
     val currentYearMonth = YearMonth.of(selectedYear, selectedMonth)
     val daysInMonth = currentYearMonth.lengthOfMonth()
 
     Column(modifier = Modifier.padding(16.dp)) {
-        // Title: Month and Year
-        Text(
-            text = "${selectedMonth.name.lowercase().replaceFirstChar { it.uppercase() }} $selectedYear",
-            style = MaterialTheme.typography.titleLarge
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Buttons for Year and Month Selection
-        Button(onClick = { selectedYear-- }) {
-            Text("Previous Year")
-        }
-        Button(onClick = { selectedYear++ }) {
-            Text("Next Year")
-        }
-        Button(onClick = { selectedMonth = selectedMonth.minus(1) }) {
-            Text("Previous Month")
-        }
-        Button(onClick = { selectedMonth = selectedMonth.plus(1) }) {
-            Text("Next Month")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Horizontal list of days
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            items(daysInMonth) { day ->
-                val date = LocalDate.of(selectedYear, selectedMonth, day + 1)
-                DateItem(day = day + 1, date = date, onSelectedDayChange)
+            Button(onClick = { selectedMonth = selectedMonth.minus(1) }) {
+                Text("<")
+            }
+            Text(
+                text = "${selectedMonth.name.lowercase().replaceFirstChar { it.uppercase() }} $selectedYear",
+                style = MaterialTheme.typography.titleLarge
+            )
+            Button(onClick = { selectedMonth = selectedMonth.plus(1) }) {
+                Text(">")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(daysInMonth) { index ->
+                val day = index + 1
+                val date = LocalDate.of(selectedYear, selectedMonth, day)
+                DateItem(
+                    day = day,
+                    date = date,
+                    isSelected = selectedDay == day,
+                    onClick = {
+                        selectedDay = day
+                        onSelectedDayChange(date.dayOfWeek)
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-fun DateItem(day: Int, date: LocalDate, onSelectedDayChange: (DayOfWeek) -> Unit) {
+fun DateItem(day: Int, date: LocalDate, isSelected: Boolean, onClick: () -> Unit) {
+    val dayOfWeekText = date.dayOfWeek.toString().lowercase().replaceFirstChar { it.uppercase() }.substring(0, 3)
+    val backgroundColor = if (isSelected) Color.Blue else Color.LightGray
+    val textColor = if (isSelected) Color.White else Color.Black
+
     Box(
         modifier = Modifier
             .size(50.dp)
-            .background(Color.LightGray, shape = RoundedCornerShape(8.dp))
-            .clickable {
-                val dayOfWeek = date.dayOfWeek
-                onSelectedDayChange(dayOfWeek)
-            },
+            .background(backgroundColor, shape = RoundedCornerShape(8.dp))
+            .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Text(text = "$day")
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = dayOfWeekText, color = textColor)
+            Text(text = "$day", color = textColor)
+        }
     }
 }
