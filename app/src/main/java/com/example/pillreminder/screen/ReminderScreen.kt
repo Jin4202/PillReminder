@@ -13,8 +13,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.pillreminder.card.AddPillButton
+import com.example.pillreminder.card.AddPillCard
 import com.example.pillreminder.card.CalendarComponent
-import com.example.pillreminder.card.PillInformationCard
+import com.example.pillreminder.card.EditPillCard
 import com.example.pillreminder.card.ReminderItem
 import com.example.pillreminder.model.reminder.Reminder
 import com.example.pillreminder.model.reminder.ReminderManager
@@ -25,7 +27,8 @@ fun ReminderScreen() {
     var reminders by remember { mutableStateOf(ReminderManager.getInstance().getReminders()) }
     var selectedDayOfWeek by remember { mutableStateOf(LocalDate.now().dayOfWeek) }
     var selectedReminder by remember { mutableStateOf(Reminder("Not Selected", java.time.LocalTime.now(), emptySet())) }
-    var showCard by remember { mutableStateOf(false) }
+    var showEditCard by remember { mutableStateOf(false) }
+    var showAddCard by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -37,15 +40,23 @@ fun ReminderScreen() {
                 items(filteredReminders, key = { it.getId() }) { reminder ->
                     ReminderItem(reminder, onClick = {
                         selectedReminder = reminder
-                        showCard = true
+                        showEditCard = true
                     })
                 }
             }
+            AddPillButton(onClick = {
+                showAddCard = true
+            })
         }
-        PillInformationCard(
+        EditPillCard (
             reminder = selectedReminder,
-            showCard = showCard,
-            onDismiss = { showCard = false },
+            showCard = showEditCard,
+            onDismiss = { showEditCard = false },
+            onUpdate = {reminders = ReminderManager.getInstance().getReminders()}
+        )
+        AddPillCard(
+            showCard = showAddCard,
+            onDismiss = { showAddCard = false },
             onUpdate = {reminders = ReminderManager.getInstance().getReminders()}
         )
     }

@@ -38,27 +38,31 @@ import java.time.DayOfWeek
 import java.time.LocalTime
 
 val sampleDailyReminder1 = Reminder(
-    "Vitamin A",
-    LocalTime.of(10, 30),
-    DayOfWeek.entries.toSet()
+    pillName = "Vitamin A",
+    time = LocalTime.of(10, 30),
+    daysOfWeek = DayOfWeek.entries.toSet(),
+    cautions = listOf("Do not take with alcohol")
 )
 
 val sampleDailyReminder2 = Reminder(
-    "Vitamin B",
-    LocalTime.of(9, 0),
-    DayOfWeek.entries.toSet()
+    pillName = "Vitamin B",
+    time = LocalTime.of(9, 0),
+    daysOfWeek = DayOfWeek.entries.toSet(),
+    cautions = listOf("Do not take with alcohol")
 )
 
 val sampleDailyReminder3 = Reminder(
-    "Vitamin C",
-    LocalTime.of(16, 0),
-    DayOfWeek.entries.toSet()
+    pillName = "Vitamin C",
+    time = LocalTime.of(16, 0),
+    daysOfWeek = DayOfWeek.entries.toSet(),
+    cautions = listOf("Do not take with alcohol")
 )
 
 val sampleWeeklyReminder = Reminder(
-    "Aspirin",
-    LocalTime.of(12, 0),
-    setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)
+    pillName = "Aspirin",
+    time = LocalTime.of(12, 0),
+    daysOfWeek = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
+    cautions = listOf("Do not take with alcohol")
 )
 
 val reminders = listOf(sampleDailyReminder1, sampleDailyReminder2, sampleDailyReminder3, sampleWeeklyReminder)
@@ -162,3 +166,5 @@ fun TestReminderButton(context: Context) {
         Text("Send Test Reminder in 5 sec")
     }
 }
+
+

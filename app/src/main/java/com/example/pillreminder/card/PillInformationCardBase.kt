@@ -1,9 +1,7 @@
 package com.example.pillreminder.card
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,106 +12,60 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pillreminder.model.reminder.Reminder
+import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalTime
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.font.FontWeight
-import com.example.pillreminder.model.reminder.ReminderManager
-import kotlinx.coroutines.launch
 
 @Composable
-fun PillInformationCard(reminder : Reminder, showCard: Boolean, onDismiss: () -> Unit, onUpdate: () -> Unit) {
-    if (showCard) {
-        // Fullscreen background to catch outside clicks
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.3f)) // Dim background
-                .clickable(
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() }
-                ) {
-                    onDismiss()
-                }
-        ) {
-            Card(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(16.dp)
-                    .clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) {
-                        // Do nothing to consume click and prevent dismissal
-                    },
-                elevation = CardDefaults.cardElevation(8.dp)
-            ) {
-                PillInformationEditCard(
-                    reminder,
-                    onDismiss,
-                    onSave = {
-                        onUpdate()
-                        onDismiss()
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun PillInformationEditCard(reminder: Reminder, onDismiss: () -> Unit, onSave: () -> Unit) {
-    var pillName by remember { mutableStateOf(reminder.pillName) }
-    var selectedDays by remember {
-        mutableStateOf(reminder.daysOfWeek.map { it.value % 7 })
-    }
-    var selectedHour by remember { mutableStateOf(reminder.getHour12()) }
-    var selectedMinute by remember { mutableStateOf(reminder.getMinute()) }
-    var selectedPeriod by remember { mutableStateOf(reminder.getPeriod()) }
+fun PillInformationCardBase(
+    initialReminder: Reminder,
+    onDismiss: () -> Unit,
+    confirmButtonText: String,
+    onConfirm: (pillName: String, time: LocalTime, days: Set<DayOfWeek>) -> Unit
+) {
+    var pillName by remember { mutableStateOf(initialReminder.pillName) }
+    var selectedDays by remember { mutableStateOf(initialReminder.daysOfWeek.map { it.value % 7 }) }
+    var selectedHour by remember { mutableStateOf(initialReminder.getHour12()) }
+    var selectedMinute by remember { mutableStateOf(initialReminder.getMinute()) }
+    var selectedPeriod by remember { mutableStateOf(initialReminder.getPeriod()) }
 
     Column(modifier = Modifier.padding(16.dp)) {
-        EditablePillName(pillName = pillName) { newName ->
-            pillName = newName
-        }
+        EditablePillName(pillName = pillName) { pillName = it }
+
         DaySelector(
             selectedDays = selectedDays,
             onDayToggle = { day ->
-                selectedDays = if (selectedDays.contains(day)) {
-                    selectedDays - day
-                } else {
-                    selectedDays + day
-                }
+                selectedDays = if (selectedDays.contains(day)) selectedDays - day else selectedDays + day
             }
         )
+
         TimeSelector(
             initialHour = selectedHour,
             initialMinute = selectedMinute,
@@ -125,49 +77,24 @@ fun PillInformationEditCard(reminder: Reminder, onDismiss: () -> Unit, onSave: (
             }
         )
 
-        //AlarmSelector()
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp), // You can make this responsive too
+                .padding(horizontal = 24.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Button(onClick = onDismiss) { Text("Cancel") }
+
             Button(onClick = {
-                val updatedPillName = pillName
-                val updatedTime = LocalTime.of(
-                    if (selectedPeriod == "AM") selectedHour % 12 else (selectedHour % 12) + 12,
-                    selectedMinute
-                )
-                val updatedDays = selectedDays.map { DayOfWeek.of(it + 1) }.toSet()
-                ReminderManager.getInstance().updateReminder(reminder.getId(), updatedPillName, updatedTime, updatedDays)
-                onSave()
-            }) { Text("Save") }
+                val hour = if (selectedPeriod == "AM") selectedHour % 12 else (selectedHour % 12) + 12
+                val time = LocalTime.of(hour, selectedMinute)
+                val days = selectedDays.map { DayOfWeek.of(it + 1) }.toSet()
+                onConfirm(pillName, time, days)
+            }) { Text(confirmButtonText) }
         }
     }
 }
 
-@Composable
-fun EditablePillName(
-    pillName: String,
-    onNameChange: (String) -> Unit
-) {
-    var text by remember { mutableStateOf(pillName) }
-
-    OutlinedTextField(
-        value = text,
-        onValueChange = {
-            text = it
-            onNameChange(it)
-        },
-        label = { Text("Pill Name") },
-        singleLine = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-    )
-}
 
 @Composable
 fun DaySelector(
@@ -198,6 +125,21 @@ fun DaySelector(
     }
 }
 
+@Composable
+fun EditablePillName(
+    pillName: String,
+    onNameChange: (String) -> Unit
+) {
+    OutlinedTextField(
+        value = pillName,
+        onValueChange = onNameChange,
+        label = { Text("Pill Name") },
+        singleLine = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    )
+}
 
 @Composable
 fun TimeSelector(
