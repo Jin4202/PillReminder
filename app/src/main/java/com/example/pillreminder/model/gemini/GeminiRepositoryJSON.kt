@@ -104,12 +104,10 @@ class GeminiRepositoryJSON(private val apiKey: String) {
                     cleanJson.getJSONArray("daysOfWeek").getString(it)
                 }
             )
-            val cautions = List(cleanJson.optJSONArray("cautions")?.length() ?: 0) {
-                cleanJson.getJSONArray("cautions").getString(it)
-            }
+            val cautions = ""
             return@withContext Reminder(
                 pillName = pillName,
-                time = time,
+                times = listOf(time),
                 daysOfWeek = daysOfWeek,
                 cautions = cautions
             )

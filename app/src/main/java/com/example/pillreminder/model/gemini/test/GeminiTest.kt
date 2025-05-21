@@ -16,9 +16,9 @@ fun test_gemini_api(assetManager: AssetManager) = runBlocking {
     if (result != null) {
         println("Success!")
         println("Name: ${result.pillName}")
-        println("Time: ${result.time}")
+        println("Time: ${result.times}")
         println("DaysOfWeek: ${result.daysOfWeek}")
-        println("Cautions: ${result.cautions.joinToString()}")
+        println("Cautions: ${result.cautions}")
     } else {
         println("Failed to analyze image.")
     }

@@ -5,9 +5,10 @@ import java.time.LocalTime
 
 class Reminder(
     var pillName: String,
-    var time: LocalTime,
+    var times: List<LocalTime>,
     var daysOfWeek: Set<DayOfWeek>,
-    var cautions: List<String> = emptyList(),
+    var usage: String = "",
+    var cautions: String = "",
     private val id: Int = generate_reminder_ID()
 ) {
     companion object {
@@ -23,17 +24,5 @@ class Reminder(
 
     fun getId(): Int {
         return id
-    }
-
-    fun getHour12(): Int {
-        return if (time.hour % 12 == 0) 12 else time.hour % 12
-    }
-
-    fun getMinute(): Int {
-        return time.minute
-    }
-
-    fun getPeriod(): String {
-        return if (time.hour < 12) "AM" else "PM"
     }
 }

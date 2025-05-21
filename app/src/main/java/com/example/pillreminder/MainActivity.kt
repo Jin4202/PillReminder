@@ -39,30 +39,30 @@ import java.time.LocalTime
 
 val sampleDailyReminder1 = Reminder(
     pillName = "Vitamin A",
-    time = LocalTime.of(10, 30),
+    times = listOf(LocalTime.of(10, 30)),
     daysOfWeek = DayOfWeek.entries.toSet(),
-    cautions = listOf("Do not take with alcohol")
+    cautions = "Do not take with alcohol"
 )
 
 val sampleDailyReminder2 = Reminder(
     pillName = "Vitamin B",
-    time = LocalTime.of(9, 0),
+    times = listOf(LocalTime.of(9, 0)),
     daysOfWeek = DayOfWeek.entries.toSet(),
-    cautions = listOf("Do not take with alcohol")
+    cautions = "Do not take with alcohol"
 )
 
 val sampleDailyReminder3 = Reminder(
     pillName = "Vitamin C",
-    time = LocalTime.of(16, 0),
+    times = listOf(LocalTime.of(16, 0)),
     daysOfWeek = DayOfWeek.entries.toSet(),
-    cautions = listOf("Do not take with alcohol")
+    cautions = "Do not take with alcohol"
 )
 
 val sampleWeeklyReminder = Reminder(
     pillName = "Aspirin",
-    time = LocalTime.of(12, 0),
+    times = listOf(LocalTime.of(12, 0)),
     daysOfWeek = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
-    cautions = listOf("Do not take with alcohol")
+    cautions = "Do not take with alcohol"
 )
 
 val reminders = listOf(sampleDailyReminder1, sampleDailyReminder2, sampleDailyReminder3, sampleWeeklyReminder)
@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             reminders.forEachIndexed { index, reminder ->
-                scheduleReminder(this, reminder.pillName, reminder.time, reminder.daysOfWeek, index)
+                scheduleReminder(this, reminder.pillName, reminder.times, reminder.daysOfWeek, index)
             }
             for (reminder in reminders) {
                 ReminderManager.getInstance().addReminder(reminder)

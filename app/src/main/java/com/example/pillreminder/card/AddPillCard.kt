@@ -27,7 +27,7 @@ fun AddPillCard(
     if (showCard) {
         val defaultReminder = Reminder(
             pillName = "",
-            time = LocalTime.of(8, 0),
+            times = listOf(LocalTime.of(8, 0)),
             daysOfWeek = emptySet()
         )
 

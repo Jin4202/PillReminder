@@ -11,7 +11,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pillreminder.model.reminder.Reminder
-import java.time.format.DateTimeFormatter
+import com.example.pillreminder.model.reminder.ReminderManager
 
 
 @Composable
@@ -28,10 +28,12 @@ fun ReminderItem(reminder: Reminder, onClick: () -> Unit) {
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
-            Text(
-                text = "Time: ${reminder.time.format(DateTimeFormatter.ofPattern("hh:mm a"))}",
-                fontSize = 16.sp
-            )
+            for (time in reminder.times) {
+                Text(
+                    text = "Time: ${ReminderManager.getInstance().getTimeString(time)}",
+                    fontSize = 16.sp
+                )
+            }
         }
     }
 }

@@ -21,12 +21,13 @@ import com.example.pillreminder.card.ReminderItem
 import com.example.pillreminder.model.reminder.Reminder
 import com.example.pillreminder.model.reminder.ReminderManager
 import java.time.LocalDate
+import java.time.LocalTime
 
 @Composable
 fun ReminderScreen() {
     var reminders by remember { mutableStateOf(ReminderManager.getInstance().getReminders()) }
     var selectedDayOfWeek by remember { mutableStateOf(LocalDate.now().dayOfWeek) }
-    var selectedReminder by remember { mutableStateOf(Reminder("Not Selected", java.time.LocalTime.now(), emptySet())) }
+    var selectedReminder by remember { mutableStateOf(Reminder("Not Selected", listOf(LocalTime.of(8,0)), emptySet())) }
     var showEditCard by remember { mutableStateOf(false) }
     var showAddCard by remember { mutableStateOf(false) }
 
