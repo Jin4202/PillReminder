@@ -38,7 +38,7 @@ import kotlin.text.uppercase
 fun CalendarComponent(onSelectedDayChange: (DayOfWeek) -> Unit) {
     var selectedYear by remember { mutableIntStateOf(YearMonth.now().year) }
     var selectedMonth by remember { mutableStateOf(YearMonth.now().month) }
-    var selectedDay by remember { mutableIntStateOf(LocalDate.now().dayOfMonth) }  // <--- 중요
+    var selectedDay by remember { mutableIntStateOf(LocalDate.now().dayOfMonth) }
 
     val currentYearMonth = YearMonth.of(selectedYear, selectedMonth)
     val daysInMonth = currentYearMonth.lengthOfMonth()
