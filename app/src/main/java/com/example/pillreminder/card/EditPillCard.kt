@@ -44,8 +44,8 @@ fun EditPillCard(
                     initialReminder = reminder,
                     onDismiss = onDismiss,
                     confirmButtonText = "Save",
-                    onConfirm = { name, time, days ->
-                        ReminderManager.getInstance().updateReminder(reminder.getId(), name, time, days)
+                    onConfirm = { id, newReminder ->
+                        ReminderManager.getInstance().updateReminder(id, newReminder)
                         onUpdate()
                         onDismiss()
                     }

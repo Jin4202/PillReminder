@@ -50,8 +50,7 @@ fun AddPillCard(
                     initialReminder = defaultReminder,
                     onDismiss = onDismiss,
                     confirmButtonText = "Add",
-                    onConfirm = { name, time, days ->
-                        val newReminder = Reminder(name, time, days)
+                    onConfirm = { _, newReminder ->
                         ReminderManager.getInstance().addReminder(newReminder)
                         onUpdate()
                         onDismiss()

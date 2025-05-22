@@ -2,6 +2,9 @@ package com.example.pillreminder.card
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,18 +18,25 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,30 +48,37 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pillreminder.model.reminder.Reminder
 import com.example.pillreminder.model.reminder.ReminderManager
 import java.time.DayOfWeek
+import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun PillInformationCardBase(
     initialReminder: Reminder,
     onDismiss: () -> Unit,
     confirmButtonText: String,
-    onConfirm: (pillName: String, time: List<LocalTime>, days: Set<DayOfWeek>) -> Unit
+    onConfirm: (Int, Reminder) -> Unit
 ) {
     val scrollState = rememberScrollState()
 
     var pillName by remember { mutableStateOf(initialReminder.pillName) }
     var selectedDays by remember { mutableStateOf(initialReminder.daysOfWeek.toSet()) }
     val times = remember { mutableStateListOf<LocalTime>().apply { addAll(initialReminder.times) } }
+    var rangeFrom by remember { mutableStateOf(initialReminder.rangeFrom) }
+    var rangeTo by remember { mutableStateOf(initialReminder.rangeTo) }
     var usageText by remember { mutableStateOf(initialReminder.usage) }
     var cautionsText by remember { mutableStateOf(initialReminder.cautions) }
 
     val textFieldMaxLines = 5
-
 
     Column(
         modifier = Modifier
@@ -79,36 +96,48 @@ fun PillInformationCardBase(
             }
         )
 
-        // TimeSelector
+        // TimeSelector [8:00, 10:00, 12:00]
         TimeSelectorColumn(
             times = times
         )
 
-        // DateRangeSelector
-        var isRange by remember { mutableStateOf(false) }
+        // Indefinitely vs Specific Date Range
+        var isRange by remember { mutableStateOf(initialReminder.isRangeOn()) }
         Row (
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(selected = !isRange, onClick = { isRange = false })
-                Text("Everyday", modifier = Modifier.padding(end = 16.dp))
+                Text("Indefinitely", modifier = Modifier.padding(end = 16.dp))
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(selected = isRange, onClick = { isRange = true })
-                Text("Range")
+                Text("Specific Date Range")
             }
         }
+
+        // Range Date Pickers if Date Range selected
         if (isRange) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                DatePickerLabel("From")
-                DatePickerLabel("To")
-            }
+            Text(text = "Schedule Duration", style = MaterialTheme.typography.bodyMedium)
+
+            DateTextField(
+                label = "From",
+                contentDescription = "Select From Date",
+                selectedDate = rangeFrom,
+                onDateSelected = { rangeFrom = it }
+            )
+
+            DateTextField(
+                label = "To",
+                contentDescription = "Select End Date",
+                selectedDate = rangeTo,
+                onDateSelected = { rangeTo = it }
+            )
         }
 
         // Usage & Cautions Text Fields
         TextField(text = usageText, onValueChange = { usageText = it }, label = "Usage", maxLines = textFieldMaxLines)
-
         TextField(text = cautionsText, onValueChange = { cautionsText = it }, label = "Cautions", maxLines = textFieldMaxLines)
 
         // Buttons
@@ -121,16 +150,23 @@ fun PillInformationCardBase(
             Button(onClick = onDismiss) { Text("Cancel") }
 
             Button(onClick = {
+                val newReminder = Reminder(
+                    pillName = pillName,
+                    times = times,
+                    daysOfWeek = selectedDays.toSet(),
+                    rangeFrom = rangeFrom,
+                    rangeTo = rangeTo,
+                    usage = usageText,
+                    cautions = cautionsText
+                )
                 onConfirm(
-                    pillName,
-                    times,
-                    selectedDays.toSet()
+                    initialReminder.getId(),
+                    newReminder
                 )
             }) { Text(confirmButtonText) }
         }
     }
 }
-
 
 @Composable
 fun EditablePillName(
@@ -147,6 +183,7 @@ fun EditablePillName(
             .padding(vertical = 8.dp)
     )
 }
+
 @Composable
 fun DaySelector(
     selectedDays: Set<DayOfWeek>,
@@ -192,7 +229,6 @@ fun DaySelector(
     }
 }
 
-
 @Composable
 fun TimeSelectorColumn(times: MutableList<LocalTime>) {
     val stateList = remember { mutableStateListOf<LocalTime>().apply { addAll(times) } }
@@ -218,8 +254,6 @@ fun TimeSelectorColumn(times: MutableList<LocalTime>) {
                             showDialog = true
                         }
                         .padding(8.dp)
-
-
                 )
                 IconButton(onClick = {
                     stateList.removeAt(index)
@@ -293,19 +327,63 @@ fun TimeSelector(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DatePickerLabel(label: String) {
-    Column {
-        Text("$label:")
-        Box(
-            modifier = Modifier
-                .background(Color.LightGray)
-                .padding(8.dp)
+fun DateTextField(
+    label: String,
+    contentDescription: String,
+    selectedDate: LocalDate?,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    var showPicker by remember { mutableStateOf(false) }
+
+    val formattedDate = selectedDate?.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")) ?: ""
+
+    OutlinedTextField(
+        value = formattedDate,
+        onValueChange = {},
+        label = { Text(label) },
+        placeholder = { Text("MM/DD/YYYY") },
+        trailingIcon = {
+            Icon(Icons.Default.DateRange, contentDescription = contentDescription)
+        },
+        readOnly = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown(pass = PointerEventPass.Initial)
+                    val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                    if (up != null) showPicker = true
+                }
+            }
+    )
+
+    if (showPicker) {
+        val state = rememberDatePickerState()
+        DatePickerDialog(
+            onDismissRequest = { showPicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    state.selectedDateMillis?.let {
+                        val picked = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                        onDateSelected(picked)
+                    }
+                    showPicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPicker = false }) {
+                    Text("Cancel")
+                }
+            }
         ) {
-            Text("Aug 1, 2025") // Replace with actual state
+            DatePicker(state = state)
         }
     }
 }
+
 
 @Composable
 fun TextField(text: String, onValueChange: (String) -> Unit, label: String, maxLines: Int) {
