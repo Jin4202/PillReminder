@@ -38,10 +38,9 @@ class ReminderManager private constructor() {
         return reminders.find { it.getId() == id }
     }
 
-    fun updateReminder(id: Int, newName: String, newTime: List<LocalTime>, newDays: Set<DayOfWeek>) {
+    fun updateReminder(id: Int, newReminder: Reminder) {
         val index = reminders.indexOfFirst { it.getId() == id }
         if (index != -1) {
-            val newReminder = Reminder(newName, newTime, newDays)
             reminders[index] = newReminder
         }
     }

@@ -1,12 +1,15 @@
 package com.example.pillreminder.model.reminder
 
 import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.LocalTime
 
 class Reminder(
     var pillName: String,
     var times: List<LocalTime>,
     var daysOfWeek: Set<DayOfWeek>,
+    var rangeFrom: LocalDate? = LocalDate.now(),
+    var rangeTo: LocalDate? = null,
     var usage: String = "",
     var cautions: String = "",
     private val id: Int = generate_reminder_ID()
@@ -20,6 +23,10 @@ class Reminder(
                 return id_counter
             }
         }
+    }
+
+    fun isRangeOn() : Boolean {
+        return rangeTo != null
     }
 
     fun getId(): Int {
