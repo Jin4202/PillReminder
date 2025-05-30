@@ -36,7 +36,7 @@ class GeminiRepository() {
             - "name": Product name as printed on the label.
             - "times": List of times in "HH:mm" format when the medicine should be taken. If not specified, return an empty list.
             - "daysOfWeek": List of days when the product should be taken. If the label says "daily", include all days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].
-            - "usage": String of usage instructions found on the label, such as dosage, method of intake (e.g., "take with water"), and timing instructions (e.g., "before meal"). If none are found, return an empty string.
+            - "usage": String of usage instructions found on the label, such as dosage, method of intake (e.g., "take with water"), and timing instructions (e.g., "before meal"). If none are found, return the proper general instruction with at least one sentence.
             - "cautions": String of all caution statements:
               First, extract any warnings or instructions from the label.
               Then, add general safety cautions based on the product name and type (e.g., probiotics).
@@ -63,7 +63,7 @@ class GeminiRepository() {
             val timeStrings = List(timesArray.length()) { timesArray.getString(it) }
             parseStringToTime(timeStrings)
         } else {
-            emptyList()
+            defaultDosageTime
         }
 
         // daysOfWeek
