@@ -15,7 +15,7 @@ class GeminiRepository() {
         val defaultDosageTime = listOf(LocalTime.of(8,30))
 
         val generativeModel = GenerativeModel(
-            modelName = "gemini-1.5-flash",
+            modelName = "gemini-2.0-flash-lite",
             apiKey = BuildConfig.GEMINI_API_KEY
         )
 
@@ -23,24 +23,22 @@ class GeminiRepository() {
 
 
         val prompt = """
-            This image shows a supplement or prescription label.
+            This image shows a supplement or prescription label. 
+            Become a health consultant and fill out following information. 
             Extract and return the information in exactly the following JSON format:
             {
-              "name": "string",
+              "name": "Vitamin D",
               "times": ["08:30", "23:59"],
               "daysOfWeek": ["Monday", "Wednesday", "Friday"],
-              "usage": "Take 2 capsules with water. Do not crush or chew",
-              "cautions": "Do not take with alcohol"
+              "usage": "Take 2 capsules with water before meal.",
+              "cautions": "Do not take with alcohol. Do not crush or chew."
             }
             Output Instructions:
-            - "name": Product name as printed on the label.
+            - "name": Product name as printed on the label. Capitalize only the necessary letter. (IMPORTANT: If the product is not digestible product, make sure to include "This is NOT consumable medication or health supplement" to the the name section.)
             - "times": List of times in "HH:mm" format when the medicine should be taken. If not specified, return an empty list.
             - "daysOfWeek": List of days when the product should be taken. If the label says "daily", include all days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].
-            - "usage": String of usage instructions found on the label, such as dosage, method of intake (e.g., "take with water"), and timing instructions (e.g., "before meal"). If none are found, return the proper general instruction with at least one sentence.
-            - "cautions": String of all caution statements:
-              First, extract any warnings or instructions from the label.
-              Then, add general safety cautions based on the product name and type (e.g., probiotics).
-              If none are found, return an empty string. (State at least one as possible)
+            - "usage": String of all usage statements. Extract any instructions from the label. Add general usage statements based on the product name and type such as dosage, method of intake, and timing instructions.
+            - "cautions": String of all caution statements. Extract any warnings warnings from the label. Add general safety cautions based on the product name and type.
             
             Return only a valid JSON object.
             """

@@ -128,11 +128,13 @@ suspend fun getPillInformationFromCapturedImage(imageBytes: ByteArray) : Reminde
         println("Name: ${result.pillName}")
         println("Time: ${result.times}")
         println("DaysOfWeek: ${result.daysOfWeek}")
+        println("Usage: ${result.usage}")
         println("Cautions: ${result.cautions}")
         val newReminder = Reminder(
             pillName = result.pillName,
             times = result.times,
             daysOfWeek = result.daysOfWeek,
+            usage = result.usage,
             cautions = result.cautions
         )
         return newReminder
