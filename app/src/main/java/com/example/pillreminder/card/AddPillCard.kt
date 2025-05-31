@@ -46,6 +46,7 @@ fun AddPillCard(
                 elevation = CardDefaults.cardElevation(8.dp)
             ) {
                 PillInformationCardBase(
+                    cardTitle = "Add Pill Reminder",
                     initialReminder = defaultReminder,
                     onDismiss = onDismiss,
                     confirmButtonText = "Add",
