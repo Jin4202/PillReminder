@@ -24,6 +24,7 @@ fun EditPillCard(
     onDismiss: () -> Unit,
     onUpdate: () -> Unit
 ) {
+
     if (showCard) {
         Box(
             modifier = Modifier
@@ -41,11 +42,17 @@ fun EditPillCard(
                 elevation = CardDefaults.cardElevation(8.dp)
             ) {
                 PillInformationCardBase(
+                    cardTitle = "Edit Pill Reminder",
                     initialReminder = reminder,
                     onDismiss = onDismiss,
                     confirmButtonText = "Save",
                     onConfirm = { id, newReminder ->
                         ReminderManager.getInstance().updateReminder(id, newReminder)
+                        onUpdate()
+                        onDismiss()
+                    },
+                    onDelete = {
+                        ReminderManager.getInstance().removeReminder(reminder)
                         onUpdate()
                         onDismiss()
                     }

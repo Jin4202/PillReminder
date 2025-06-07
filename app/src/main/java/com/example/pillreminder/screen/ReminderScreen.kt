@@ -38,7 +38,7 @@ fun ReminderScreen() {
             CalendarComponent(onSelectedDayChange = { selectedDayOfWeek = it })
             LazyColumn {
                 val filteredReminders = reminders.filter { it.daysOfWeek.contains(selectedDayOfWeek) }
-                items(filteredReminders, key = { it.getId() }) { reminder ->
+                items(filteredReminders) { reminder ->
                     ReminderItem(reminder, onClick = {
                         selectedReminder = reminder
                         showEditCard = true

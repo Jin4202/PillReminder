@@ -20,17 +20,16 @@ import java.time.LocalTime
 
 @Composable
 fun AddPillCard(
+    defaultReminder: Reminder = Reminder(
+        pillName = "",
+        times = listOf(LocalTime.of(8, 0)),
+        daysOfWeek = emptySet()
+    ),
     showCard: Boolean,
     onDismiss: () -> Unit,
     onUpdate: () -> Unit
 ) {
     if (showCard) {
-        val defaultReminder = Reminder(
-            pillName = "",
-            times = listOf(LocalTime.of(8, 0)),
-            daysOfWeek = emptySet()
-        )
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -47,6 +46,7 @@ fun AddPillCard(
                 elevation = CardDefaults.cardElevation(8.dp)
             ) {
                 PillInformationCardBase(
+                    cardTitle = "Add Pill Reminder",
                     initialReminder = defaultReminder,
                     onDismiss = onDismiss,
                     confirmButtonText = "Add",

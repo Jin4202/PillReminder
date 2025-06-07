@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
@@ -24,19 +23,16 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,6 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pillreminder.model.reminder.Reminder
@@ -63,10 +60,12 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun PillInformationCardBase(
+    cardTitle : String = "",
     initialReminder: Reminder,
     onDismiss: () -> Unit,
     confirmButtonText: String,
-    onConfirm: (Int, Reminder) -> Unit
+    onConfirm: (Int, Reminder) -> Unit,
+    onDelete: (() -> Unit)? = null
 ) {
     val scrollState = rememberScrollState()
 
@@ -85,6 +84,30 @@ fun PillInformationCardBase(
             .padding(16.dp)
             .verticalScroll(scrollState)
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(cardTitle, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+
+            if (onDelete != null) {
+                Button(
+                    onClick = onDelete,
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = Color.Red,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Delete")
+                }
+            } else {
+                Text("")
+            }
+        }
+
         // Pill Name
         EditablePillName(pillName = pillName) { pillName = it }
 

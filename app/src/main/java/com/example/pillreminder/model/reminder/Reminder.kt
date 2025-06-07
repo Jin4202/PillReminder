@@ -5,9 +5,9 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 class Reminder(
-    var pillName: String,
-    var times: List<LocalTime>,
-    var daysOfWeek: Set<DayOfWeek>,
+    var pillName: String = "",
+    var times: List<LocalTime> = listOf(),
+    var daysOfWeek: Set<DayOfWeek> = setOf(),
     var rangeFrom: LocalDate? = LocalDate.now(),
     var rangeTo: LocalDate? = null,
     var usage: String = "",
