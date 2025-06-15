@@ -19,12 +19,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.pillreminder.model.nav.BottomNavItem
 import com.example.pillreminder.card.BottomNavigationBar
+import com.example.pillreminder.model.db.UserRepository
 import com.example.pillreminder.model.reminder.Reminder
 import com.example.pillreminder.model.reminder.ReminderBroadcastReceiver
 import com.example.pillreminder.model.reminder.ReminderManager
@@ -34,6 +36,9 @@ import com.example.pillreminder.screen.CameraScreen
 import com.example.pillreminder.screen.PillsScreen
 import com.example.pillreminder.screen.ProfileScreen
 import com.example.pillreminder.screen.ReminderScreen
+import com.example.pillreminder.viewmodel.UserViewModel
+import com.example.pillreminder.viewmodel.UserViewModelFactory
+import com.google.firebase.firestore.FirebaseFirestore
 import java.time.DayOfWeek
 import java.time.LocalTime
 
@@ -115,6 +120,12 @@ fun NavigationGraph(
     navController: NavHostController,
     modifier: Modifier
 ) {
+    val db = FirebaseFirestore.getInstance()
+    val userId = "rrzcgqFzboo6YmF4s7mi"
+    val viewModel: UserViewModel = viewModel(
+        factory = UserViewModelFactory(db, userId)
+    )
+
     NavHost(navController, startDestination = BottomNavItem.Main.route, modifier = modifier) {
         composable(BottomNavItem.Camera.route) {
             CameraScreen()
@@ -126,7 +137,14 @@ fun NavigationGraph(
             PillsScreen()
         }
         composable(BottomNavItem.Profile.route) {
-            ProfileScreen()
+            ProfileScreen(
+                loadData = {
+                    viewModel.fetchReminders()
+                },
+                updateData = {
+                    viewModel.updateReminders()
+                }
+            )
         }
     }
 }

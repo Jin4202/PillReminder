@@ -9,41 +9,31 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    loadData: () -> Unit,
+    updateData: () -> Unit
+) {
     var user = remember { mutableStateOf("username_placeholder") }
     var email = remember { mutableStateOf("email_placeholder") }
     var reminderList = remember { mutableListOf<String>() }
 
-    val db = FirebaseFirestore.getInstance()
-    val docRef = db.collection("users")
-        .document("rrzcgqFzboo6YmF4s7mi")
 
     Column (
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Button(
-            onClick = {
-                docRef.get().addOnSuccessListener { document ->
-                    if (document != null) {
-                        user.value = document.getString("name") ?: "username_placeholder2"
-                        email.value = document.getString("email") ?: "email_placeholder2"
-                    }
-                }
-            }
+            onClick = loadData
         ) {
-            Text("Read data")
+            Text("Load data")
         }
 
         Button(
-            onClick = {
-
-            },
+            onClick = updateData
         ) {
-            Text("Write data")
+            Text("Save data")
         }
 
         Text("User: ${user.value}")

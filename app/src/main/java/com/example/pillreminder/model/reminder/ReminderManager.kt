@@ -1,5 +1,6 @@
 package com.example.pillreminder.model.reminder
 
+import android.util.Log
 import java.time.DayOfWeek
 import java.time.LocalTime
 import java.util.Locale
@@ -16,6 +17,11 @@ class ReminderManager private constructor() {
                 instance ?: ReminderManager().also { instance = it }
             }
         }
+    }
+
+    fun setReminders(newReminders: List<Reminder>) {
+        reminders.clear()
+        reminders.addAll(newReminders)
     }
 
     fun getReminders(): List<Reminder> {
@@ -54,5 +60,28 @@ class ReminderManager private constructor() {
         val minute = String.format(Locale.US, "%02d", localTime.minute)
         val period = if (localTime.hour < 12) "AM" else "PM"
         return "$hour:$minute $period"
+    }
+
+    fun addReminderFromDTO(dto: ReminderDTO): Boolean {
+        return try {
+            val reminder = dto.toReminder()
+            var isAdded = false
+            for (existReminder in reminders) {
+                if (existReminder.getId() == reminder.getId()) {
+                    isAdded = true
+                }
+            }
+            if (!isAdded) {
+                reminders.add(reminder)
+            }
+            true
+        } catch (e: Exception) {
+            Log.e("ReminderManager", "Error converting ReminderDTO: $dto", e)
+            false
+        }
+    }
+
+    fun getReminderDTOList(): List<ReminderDTO> {
+        return reminders.map { it.toDTO() }
     }
 }
