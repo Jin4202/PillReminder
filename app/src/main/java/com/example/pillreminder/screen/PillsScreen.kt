@@ -7,18 +7,33 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.example.pillreminder.card.EditPillCard
 import com.example.pillreminder.card.PillItem
 import com.example.pillreminder.model.reminder.Reminder
 import com.example.pillreminder.model.reminder.ReminderManager
+import java.time.LocalTime
 
 @Composable
 fun PillsScreen() {
-    var showCard by remember { mutableStateOf(false) }
+    var reminders = ReminderManager.getInstance().getReminders()
+    var showEditCard by remember { mutableStateOf(false) }
+    var selectedReminder by remember { mutableStateOf(Reminder("Not Selected", listOf(LocalTime.of(8,0)), emptySet())) }
 
-    val reminders = ReminderManager.getInstance().getReminders()
     LazyColumn {
         items(reminders) { reminder ->
-            PillItem(reminder,  onClick = {showCard = true})
+            PillItem(reminder,  onClick = {
+                selectedReminder = reminder
+                showEditCard = true
+            })
         }
+    }
+    if (showEditCard) {
+        // Show the PillCard here
+        EditPillCard (
+            reminder = selectedReminder,
+            showCard = showEditCard,
+            onDismiss = { showEditCard = false },
+            onUpdate = {reminders = ReminderManager.getInstance().getReminders()}
+        )
     }
 }

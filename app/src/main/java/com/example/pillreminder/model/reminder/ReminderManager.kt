@@ -64,7 +64,7 @@ class ReminderManager private constructor() {
 
     fun addReminderFromDTO(dto: ReminderDTO): Boolean {
         return try {
-            val reminder = dto.toReminder()
+            val reminder = DTOUtils.toReminder(dto)
             var isAdded = false
             for (existReminder in reminders) {
                 if (existReminder.getId() == reminder.getId()) {
@@ -82,6 +82,6 @@ class ReminderManager private constructor() {
     }
 
     fun getReminderDTOList(): List<ReminderDTO> {
-        return reminders.map { it.toDTO() }
+        return reminders.map { DTOUtils.toDTO(it) }
     }
 }
