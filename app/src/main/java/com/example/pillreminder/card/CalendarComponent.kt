@@ -1,5 +1,6 @@
 package com.example.pillreminder.card
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,11 +13,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -43,6 +46,21 @@ fun CalendarComponent(onSelectedDayChange: (DayOfWeek) -> Unit) {
     val currentYearMonth = YearMonth.of(selectedYear, selectedMonth)
     val daysInMonth = currentYearMonth.lengthOfMonth()
 
+    val listState = rememberLazyListState()
+
+    val sizeOfDayItem = 50
+
+    LaunchedEffect(selectedDay, selectedMonth, selectedYear) {
+        val selectedIndex = selectedDay - 1
+        val centerOffset = (listState.layoutInfo.visibleItemsInfo.size / 2).coerceAtLeast(1)
+        val targetIndex = (selectedIndex - centerOffset).coerceIn(0, daysInMonth - 1)
+        var scrollOffset = sizeOfDayItem
+        if (targetIndex == 0) {
+            scrollOffset = 0
+        }
+        listState.animateScrollToItem(index = targetIndex, scrollOffset = scrollOffset)
+    }
+
     Column(modifier = Modifier.padding(16.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -63,7 +81,10 @@ fun CalendarComponent(onSelectedDayChange: (DayOfWeek) -> Unit) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyRow(
+            state = listState,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             items(daysInMonth) { index ->
                 val day = index + 1
                 val date = LocalDate.of(selectedYear, selectedMonth, day)
@@ -74,7 +95,8 @@ fun CalendarComponent(onSelectedDayChange: (DayOfWeek) -> Unit) {
                     onClick = {
                         selectedDay = day
                         onSelectedDayChange(date.dayOfWeek)
-                    }
+                    },
+                    sizeOfDayItem = sizeOfDayItem
                 )
             }
         }
@@ -82,14 +104,14 @@ fun CalendarComponent(onSelectedDayChange: (DayOfWeek) -> Unit) {
 }
 
 @Composable
-fun DateItem(day: Int, date: LocalDate, isSelected: Boolean, onClick: () -> Unit) {
+fun DateItem(day: Int, date: LocalDate, isSelected: Boolean, onClick: () -> Unit, sizeOfDayItem: Int = 50) {
     val dayOfWeekText = date.dayOfWeek.toString().lowercase().replaceFirstChar { it.uppercase() }.substring(0, 3)
     val backgroundColor = if (isSelected) Color.Blue else Color.LightGray
     val textColor = if (isSelected) Color.White else Color.Black
 
     Box(
         modifier = Modifier
-            .size(50.dp)
+            .size(sizeOfDayItem.dp)
             .background(backgroundColor, shape = RoundedCornerShape(8.dp))
             .clickable { onClick() },
         contentAlignment = Alignment.Center
