@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -16,6 +17,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -38,39 +44,40 @@ import com.example.pillreminder.screen.ProfileScreen
 import com.example.pillreminder.screen.ReminderScreen
 import com.example.pillreminder.viewmodel.UserViewModel
 import com.example.pillreminder.viewmodel.UserViewModelFactory
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.time.DayOfWeek
 import java.time.LocalTime
-
-val sampleDailyReminder1 = Reminder(
-    pillName = "Vitamin A",
-    times = listOf(LocalTime.of(10, 30)),
-    daysOfWeek = DayOfWeek.entries.toSet(),
-    cautions = "Do not take with alcohol"
-)
-
-val sampleDailyReminder2 = Reminder(
-    pillName = "Vitamin B",
-    times = listOf(LocalTime.of(9, 0)),
-    daysOfWeek = DayOfWeek.entries.toSet(),
-    cautions = "Do not take with alcohol"
-)
-
-val sampleDailyReminder3 = Reminder(
-    pillName = "Vitamin C",
-    times = listOf(LocalTime.of(16, 0)),
-    daysOfWeek = DayOfWeek.entries.toSet(),
-    cautions = "Do not take with alcohol"
-)
-
-val sampleWeeklyReminder = Reminder(
-    pillName = "Aspirin",
-    times = listOf(LocalTime.of(12, 0)),
-    daysOfWeek = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
-    cautions = "Do not take with alcohol"
-)
-
-val reminders = listOf(sampleDailyReminder1, sampleDailyReminder2, sampleDailyReminder3, sampleWeeklyReminder)
+//
+//val sampleDailyReminder1 = Reminder(
+//    pillName = "Vitamin A",
+//    times = listOf(LocalTime.of(10, 30)),
+//    daysOfWeek = DayOfWeek.entries.toSet(),
+//    cautions = "Do not take with alcohol"
+//)
+//
+//val sampleDailyReminder2 = Reminder(
+//    pillName = "Vitamin B",
+//    times = listOf(LocalTime.of(9, 0)),
+//    daysOfWeek = DayOfWeek.entries.toSet(),
+//    cautions = "Do not take with alcohol"
+//)
+//
+//val sampleDailyReminder3 = Reminder(
+//    pillName = "Vitamin C",
+//    times = listOf(LocalTime.of(16, 0)),
+//    daysOfWeek = DayOfWeek.entries.toSet(),
+//    cautions = "Do not take with alcohol"
+//)
+//
+//val sampleWeeklyReminder = Reminder(
+//    pillName = "Aspirin",
+//    times = listOf(LocalTime.of(12, 0)),
+//    daysOfWeek = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
+//    cautions = "Do not take with alcohol"
+//)
+//
+//val reminders = listOf(sampleDailyReminder1, sampleDailyReminder2, sampleDailyReminder3, sampleWeeklyReminder)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,12 +87,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            reminders.forEachIndexed { index, reminder ->
-                scheduleReminder(this, reminder.pillName, reminder.times, reminder.daysOfWeek, index)
-            }
-            for (reminder in reminders) {
-                ReminderManager.getInstance().addReminder(reminder)
-            }
+//            reminders.forEachIndexed { index, reminder ->
+//                scheduleReminder(this, reminder.pillName, reminder.times, reminder.daysOfWeek, index)
+//            }
+//            for (reminder in reminders) {
+//                ReminderManager.getInstance().addReminder(reminder)
+//            }
             MainScreen()
             //TestReminderButton(this)
         }
@@ -121,28 +128,57 @@ fun NavigationGraph(
     modifier: Modifier
 ) {
     val db = FirebaseFirestore.getInstance()
-    val userId = "rrzcgqFzboo6YmF4s7mi"
+    val auth = FirebaseAuth.getInstance()
+    var userId by remember { mutableStateOf(auth.currentUser?.uid ?: "") }
     val viewModel: UserViewModel = viewModel(
         factory = UserViewModelFactory(db, userId)
     )
+//    Log.d("UserIDTest", "User ID on Create: ${userId}")
+    LaunchedEffect(Unit) {
+        if (userId.isNotEmpty()) {
+            viewModel.fetchReminders()
+        }
+    }
+
 
     NavHost(navController, startDestination = BottomNavItem.Main.route, modifier = modifier) {
         composable(BottomNavItem.Camera.route) {
-            CameraScreen()
+            CameraScreen(
+                onSaved = {
+                    navController.navigate(BottomNavItem.Main.route)
+                }
+            )
         }
         composable(BottomNavItem.Main.route) {
-            ReminderScreen()
+            ReminderScreen(
+                updateData= {
+                    if (userId.isNotEmpty()) {
+                        viewModel.updateReminders()
+                    }
+                }
+            )
         }
         composable(BottomNavItem.Pills.route) {
-            PillsScreen()
+            PillsScreen(
+                updateData= {
+                    if (userId.isNotEmpty()) {
+                        viewModel.updateReminders()
+                    }
+                }
+            )
         }
         composable(BottomNavItem.Profile.route) {
             ProfileScreen(
+                auth = auth,
                 loadData = {
-                    viewModel.fetchReminders()
+                    if (userId.isNotEmpty()) {
+                        viewModel.fetchReminders()
+                    }
                 },
                 updateData = {
-                    viewModel.updateReminders()
+                    if (userId.isNotEmpty()) {
+                        viewModel.updateReminders()
+                    }
                 }
             )
         }

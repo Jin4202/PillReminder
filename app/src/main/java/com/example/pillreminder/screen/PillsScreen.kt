@@ -19,7 +19,9 @@ import com.example.pillreminder.model.reminder.ReminderManager
 import java.time.LocalTime
 
 @Composable
-fun PillsScreen() {
+fun PillsScreen(
+    updateData: () -> Unit
+) {
     var reminders = ReminderManager.getInstance().getReminders()
     var showEditCard by remember { mutableStateOf(false) }
     var selectedReminder by remember { mutableStateOf(Reminder("Not Selected", listOf(LocalTime.of(8,0)), emptySet())) }
@@ -45,12 +47,20 @@ fun PillsScreen() {
         reminder = selectedReminder,
         showCard = showEditCard,
         onDismiss = { showEditCard = false },
-        onUpdate = {reminders = ReminderManager.getInstance().getReminders()}
+        onUpdate = {
+            reminders = ReminderManager.getInstance().getReminders()
+            showEditCard = false
+            updateData()
+        }
     )
     AddPillCard(
         showCard = showAddCard,
         onDismiss = { showAddCard = false },
-        onUpdate = {reminders = ReminderManager.getInstance().getReminders()}
+        onUpdate = {
+            reminders = ReminderManager.getInstance().getReminders()
+            showAddCard = false
+            updateData()
+        }
     )
 
 }

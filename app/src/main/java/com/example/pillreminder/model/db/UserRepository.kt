@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.pillreminder.model.reminder.ReminderDTO
 import com.example.pillreminder.model.reminder.ReminderManager
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.gson.Gson
 import kotlinx.coroutines.tasks.await
 
@@ -34,7 +35,8 @@ object UserRepository {
     suspend fun updateReminders(db: FirebaseFirestore, userId: String) : Boolean {
         return try {
             val reminderDTOs = ReminderManager.getInstance().getReminderDTOList()
-            db.collection("users").document(userId).update("reminderList", reminderDTOs).await()
+
+            db.collection("users").document(userId).set(mapOf("reminderList" to reminderDTOs), SetOptions.merge()).await()
             true
         } catch (e: Exception) {
             false

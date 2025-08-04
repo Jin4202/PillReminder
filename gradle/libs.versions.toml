@@ -1,6 +1,7 @@
 [versions]
 agp = "8.8.1"
 firebaseBom = "33.15.0"
+firebaseUiAuth = "8.0.2"
 gson = "2.10.1"
 guava = "32.0.1-jre"
 json = "20231013"
@@ -24,8 +25,10 @@ firebaseDatabaseKtx = "21.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+firebase-ui-auth = { module = "com.firebaseui:firebase-ui-auth", version.ref = "firebaseUiAuth" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 json = { module = "org.json:json", version.ref = "json" }

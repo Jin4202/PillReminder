@@ -1,7 +1,6 @@
 package com.example.pillreminder.model.reminder
 
 import android.util.Log
-import java.time.DayOfWeek
 import java.time.LocalTime
 import java.util.Locale
 
@@ -19,11 +18,6 @@ class ReminderManager private constructor() {
         }
     }
 
-    fun setReminders(newReminders: List<Reminder>) {
-        reminders.clear()
-        reminders.addAll(newReminders)
-    }
-
     fun getReminders(): List<Reminder> {
         return reminders.toList()
     }
@@ -36,23 +30,11 @@ class ReminderManager private constructor() {
         reminders.remove(reminder)
     }
 
-    fun removeReminderById(id: Int) {
-        reminders.removeAll { it.getId() == id }
-    }
-
-    fun getReminderById(id: Int): Reminder? {
-        return reminders.find { it.getId() == id }
-    }
-
     fun updateReminder(id: Int, newReminder: Reminder) {
         val index = reminders.indexOfFirst { it.getId() == id }
         if (index != -1) {
             reminders[index] = newReminder
         }
-    }
-
-    fun getRemindersForDayOfWeek(dayOfWeek: DayOfWeek): List<Reminder> {
-        return reminders.filter { it.daysOfWeek.contains(dayOfWeek) }
     }
 
     fun getTimeString(localTime: LocalTime) : String {

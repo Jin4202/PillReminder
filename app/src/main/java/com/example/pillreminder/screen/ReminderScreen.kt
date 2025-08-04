@@ -24,7 +24,9 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 @Composable
-fun ReminderScreen() {
+fun ReminderScreen(
+    updateData: () -> Unit
+) {
     var reminders by remember { mutableStateOf(ReminderManager.getInstance().getReminders()) }
     var selectedDayOfWeek by remember { mutableStateOf(LocalDate.now().dayOfWeek) }
     var selectedReminder by remember { mutableStateOf(Reminder("Not Selected", listOf(LocalTime.of(8,0)), emptySet())) }
@@ -53,12 +55,20 @@ fun ReminderScreen() {
             reminder = selectedReminder,
             showCard = showEditCard,
             onDismiss = { showEditCard = false },
-            onUpdate = {reminders = ReminderManager.getInstance().getReminders()}
+            onUpdate = {
+                reminders = ReminderManager.getInstance().getReminders()
+                showEditCard = false
+                updateData()
+            }
         )
         AddPillCard(
             showCard = showAddCard,
             onDismiss = { showAddCard = false },
-            onUpdate = {reminders = ReminderManager.getInstance().getReminders()}
+            onUpdate = {
+                reminders = ReminderManager.getInstance().getReminders()
+                showAddCard = false
+                updateData()
+            }
         )
     }
 }

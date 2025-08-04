@@ -53,7 +53,6 @@ fun AddPillCard(
                     onConfirm = { _, newReminder ->
                         ReminderManager.getInstance().addReminder(newReminder)
                         onUpdate()
-                        onDismiss()
                     }
                 )
             }

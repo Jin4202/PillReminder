@@ -49,12 +49,10 @@ fun EditPillCard(
                     onConfirm = { id, newReminder ->
                         ReminderManager.getInstance().updateReminder(id, newReminder)
                         onUpdate()
-                        onDismiss()
                     },
                     onDelete = {
                         ReminderManager.getInstance().removeReminder(reminder)
                         onUpdate()
-                        onDismiss()
                     }
                 )
             }

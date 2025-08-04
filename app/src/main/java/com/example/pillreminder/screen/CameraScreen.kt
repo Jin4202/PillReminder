@@ -33,11 +33,12 @@ import java.util.concurrent.Executor
 
 
 @Composable
-fun CameraScreen() {
+fun CameraScreen(
+    onSaved: () -> Unit
+) {
     val context = LocalContext.current
     // Check for camera permission
     var hasCameraPermission by remember { mutableStateOf(false) }
-    var pillAdded by remember { mutableStateOf(false) }
     var pillInformation by remember { mutableStateOf<Reminder?>(null) }
     var showAddCard by remember { mutableStateOf(false) }
 
@@ -89,7 +90,10 @@ fun CameraScreen() {
             defaultReminder = pillInformation ?: Reminder(),
             showCard = showAddCard,
             onDismiss = { showAddCard = false },
-            onUpdate = {}
+            onUpdate = {
+                showAddCard = false
+                onSaved()
+            }
         )
     }
 }
