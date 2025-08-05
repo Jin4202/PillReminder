@@ -2,6 +2,13 @@ package com.example.pillreminder.model.reminder
 
 import android.content.Context
 import android.util.Log
+import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
+import com.example.pillreminder.model.db.ReminderSerializer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.util.Locale
 
@@ -26,11 +33,17 @@ class ReminderManager private constructor() {
     fun addReminder(context: Context, reminder: Reminder) {
         reminders.add(reminder)
         scheduleReminder(context, reminder)
+        CoroutineScope(Dispatchers.IO).launch {
+            saveToDataStore(context)
+        }
     }
 
     fun removeReminder(context: Context, reminder: Reminder) {
         reminders.remove(reminder)
         cancelReminder(context, reminder)
+        CoroutineScope(Dispatchers.IO).launch {
+            saveToDataStore(context)
+        }
     }
 
     fun updateReminder(context: Context, oldReminderId: Int, newReminder: Reminder) {
@@ -40,6 +53,9 @@ class ReminderManager private constructor() {
             cancelReminder(context, oldReminder)
             reminders[index] = newReminder
             scheduleReminder(context, newReminder)
+            CoroutineScope(Dispatchers.IO).launch {
+                saveToDataStore(context)
+            }
         }
     }
 
@@ -72,4 +88,23 @@ class ReminderManager private constructor() {
     fun getReminderDTOList(): List<ReminderDTO> {
         return reminders.map { DTOUtils.toDTO(it) }
     }
+
+    suspend fun saveToDataStore(context: Context) {
+        context.reminderDataStore.updateData {
+            ReminderList.newBuilder()
+                .addAllReminders(reminders.map { ReminderProtoUtils.toProto(it) })
+                .build()
+        }
+    }
+
+    suspend fun loadFromDataStore(context: Context) {
+        val reminderList = context.reminderDataStore.data.first()
+        reminders.clear()
+        reminders.addAll(reminderList.remindersList.map { ReminderProtoUtils.fromProto(it) })
+    }
 }
+
+val Context.reminderDataStore: DataStore<ReminderList> by dataStore(
+    fileName = "reminders.pb",
+    serializer = ReminderSerializer
+)

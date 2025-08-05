@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option java_package = "com.example.pillreminder.model.reminder";
+option java_multiple_files = true;
+
+message ReminderMessage {
+  int32 id = 1;
+  string pillName = 2;
+  repeated string times = 3;
+  repeated int32 daysOfWeek = 4;
+  string rangeFrom = 5;
+  string rangeTo = 6;
+  string usage = 7;
+  string cautions = 8;
+}
+
+message ReminderList {
+  repeated ReminderMessage reminders = 1;
+}

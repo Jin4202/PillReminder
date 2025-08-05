@@ -60,6 +60,15 @@ fun scheduleReminder(context: Context, reminder: Reminder) {
                 set(Calendar.MILLISECOND, 0)
             }
 
+            var triggerAtMillis = calendar.timeInMillis
+            val now = System.currentTimeMillis()
+
+            if (triggerAtMillis <= now) {
+                calendar.add(Calendar.DAY_OF_YEAR, 7)
+                triggerAtMillis = calendar.timeInMillis
+                Log.w("ReminderSchedule", "Past time detected. Rescheduled to next week: $dayOfWeek $time → $triggerAtMillis")
+            }
+
             val requestCode = (pillName + dayOfWeek.name + time.toString()).hashCode()
 
             val intent = Intent(intentBase).apply {
@@ -74,6 +83,7 @@ fun scheduleReminder(context: Context, reminder: Reminder) {
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
+
             Log.d("ReminderSchedule", "Scheduled alarm for '$pillName' at $dayOfWeek $time → timeInMillis=${calendar.timeInMillis}")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 if (!alarmManager.canScheduleExactAlarms()) {

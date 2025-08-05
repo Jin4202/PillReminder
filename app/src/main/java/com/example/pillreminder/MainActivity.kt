@@ -30,7 +30,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.pillreminder.model.nav.BottomNavItem
 import com.example.pillreminder.card.BottomNavigationBar
 import com.example.pillreminder.model.reminder.ReminderBroadcastReceiver
+import com.example.pillreminder.model.reminder.ReminderManager
 import com.example.pillreminder.model.reminder.createNotificationChannel
+import com.example.pillreminder.model.reminder.scheduleReminder
 import com.example.pillreminder.screen.CameraScreen
 import com.example.pillreminder.screen.PillsScreen
 import com.example.pillreminder.screen.ProfileScreen
@@ -85,6 +87,11 @@ fun NavigationGraph(
     )
     LaunchedEffect(Unit) {
         viewModel.fetchReminders(context)
+        val manager = ReminderManager.getInstance()
+        manager.loadFromDataStore(context)
+        manager.getReminders().forEach {
+            scheduleReminder(context, it)
+        }
     }
 
     NavHost(navController, startDestination = BottomNavItem.Main.route, modifier = modifier) {
