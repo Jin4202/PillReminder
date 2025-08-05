@@ -1,5 +1,6 @@
 package com.example.pillreminder.model.reminder
 
+import android.content.Context
 import android.util.Log
 import java.time.LocalTime
 import java.util.Locale
@@ -22,18 +23,23 @@ class ReminderManager private constructor() {
         return reminders.toList()
     }
 
-    fun addReminder(reminder: Reminder) {
+    fun addReminder(context: Context, reminder: Reminder) {
         reminders.add(reminder)
+        scheduleReminder(context, reminder)
     }
 
-    fun removeReminder(reminder: Reminder) {
+    fun removeReminder(context: Context, reminder: Reminder) {
         reminders.remove(reminder)
+        cancelReminder(context, reminder)
     }
 
-    fun updateReminder(id: Int, newReminder: Reminder) {
-        val index = reminders.indexOfFirst { it.getId() == id }
+    fun updateReminder(context: Context, oldReminderId: Int, newReminder: Reminder) {
+        val index = reminders.indexOfFirst { it.getId() == oldReminderId }
         if (index != -1) {
+            val oldReminder = reminders[index]
+            cancelReminder(context, oldReminder)
             reminders[index] = newReminder
+            scheduleReminder(context, newReminder)
         }
     }
 
@@ -44,7 +50,7 @@ class ReminderManager private constructor() {
         return "$hour:$minute $period"
     }
 
-    fun addReminderFromDTO(dto: ReminderDTO): Boolean {
+    fun addReminderFromDTO(context: Context, dto: ReminderDTO): Boolean {
         return try {
             val reminder = DTOUtils.toReminder(dto)
             var isAdded = false
@@ -54,7 +60,7 @@ class ReminderManager private constructor() {
                 }
             }
             if (!isAdded) {
-                reminders.add(reminder)
+                addReminder(context, reminder)
             }
             true
         } catch (e: Exception) {

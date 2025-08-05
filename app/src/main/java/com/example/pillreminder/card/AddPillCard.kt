@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.pillreminder.model.reminder.Reminder
 import com.example.pillreminder.model.reminder.ReminderManager
@@ -29,6 +30,7 @@ fun AddPillCard(
     onDismiss: () -> Unit,
     onUpdate: () -> Unit
 ) {
+    val context = LocalContext.current
     if (showCard) {
         Box(
             modifier = Modifier
@@ -51,7 +53,7 @@ fun AddPillCard(
                     onDismiss = onDismiss,
                     confirmButtonText = "Add",
                     onConfirm = { _, newReminder ->
-                        ReminderManager.getInstance().addReminder(newReminder)
+                        ReminderManager.getInstance().addReminder(context, newReminder)
                         onUpdate()
                     }
                 )

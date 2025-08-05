@@ -2,18 +2,32 @@ package com.example.pillreminder.model.reminder
 
 import android.Manifest
 import android.R
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import java.time.DayOfWeek
+import java.util.Calendar
 
 class ReminderBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val pillName = intent.getStringExtra("PILL_NAME") ?: "Pill"
+        val pillName = intent.getStringExtra("PILL_NAME") ?: return
         val notificationId = intent.getIntExtra("NOTIFICATION_ID", 0)
+        val dayOfWeekValue = intent.getIntExtra("DAY_OF_WEEK", -1)
+        val hour = intent.getIntExtra("HOUR", -1)
+        val minute = intent.getIntExtra("MINUTE", -1)
+        val repeat = intent.getBooleanExtra("REPEAT", false)
+
+        Log.d("ReminderTrigger", "Alarm triggered! Pill: $pillName, ID: $notificationId")
 
         val notification = NotificationCompat.Builder(context, "pill_reminder_channel")
             .setSmallIcon(R.drawable.ic_dialog_info)
@@ -39,5 +53,58 @@ class ReminderBroadcastReceiver : BroadcastReceiver() {
             return
         }
         notificationManager.notify(notificationId, notification)
+
+        // Repeating Alarm Logic
+        if (repeat && dayOfWeekValue != -1 && hour != -1 && minute != -1) {
+            val nextAlarmTime = Calendar.getInstance().apply {
+                add(Calendar.DATE, 7)
+                set(Calendar.DAY_OF_WEEK, dayOfWeekValue)
+                set(Calendar.HOUR_OF_DAY, hour)
+                set(Calendar.MINUTE, minute)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+
+            val newIntent = Intent(context, ReminderBroadcastReceiver::class.java).apply {
+                putExtra("PILL_NAME", pillName)
+                putExtra("NOTIFICATION_ID", notificationId)
+                putExtra("DAY_OF_WEEK", dayOfWeekValue)
+                putExtra("HOUR", hour)
+                putExtra("MINUTE", minute)
+                putExtra("REPEAT", true)
+            }
+
+            val requestCode =
+                (pillName + DayOfWeek.of(dayOfWeekValue).name + "$hour:$minute").hashCode()
+
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                requestCode,
+                newIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (!alarmManager.canScheduleExactAlarms()) {
+                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                        data = Uri.parse("package:" + context.packageName)
+                    }
+                    context.startActivity(intent)
+                    return
+                }
+            }
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                nextAlarmTime.timeInMillis,
+                pendingIntent
+            )
+
+            Log.d(
+                "ReminderReschedule",
+                "Rescheduled next alarm for '$pillName' at $hour:$minute next $dayOfWeekValue"
+            )
+
+        }
     }
 }
