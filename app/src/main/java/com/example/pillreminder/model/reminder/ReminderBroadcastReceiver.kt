@@ -38,32 +38,23 @@ class ReminderBroadcastReceiver : BroadcastReceiver() {
             .build()
 
         val notificationManager = NotificationManagerCompat.from(context)
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED)
             return
-        }
         notificationManager.notify(notificationId, notification)
 
         // Repeating Alarm Logic
-        if (repeat && dayOfWeekValue != -1 && hour != -1 && minute != -1) {
-            val nextAlarmTime = Calendar.getInstance().apply {
-                add(Calendar.DATE, 7)
+        if (repeat && dayOfWeekValue in Calendar.SUNDAY..Calendar.SATURDAY && hour in 0..23 && minute in 0..59) {
+            val now = System.currentTimeMillis()
+            val nextCal = Calendar.getInstance().apply {
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
                 set(Calendar.DAY_OF_WEEK, dayOfWeekValue)
                 set(Calendar.HOUR_OF_DAY, hour)
                 set(Calendar.MINUTE, minute)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
+                if (timeInMillis <= now) add(Calendar.WEEK_OF_YEAR, 1)
             }
+            val nextMillis = nextCal.timeInMillis
 
             val newIntent = Intent(context, ReminderBroadcastReceiver::class.java).apply {
                 putExtra("PILL_NAME", pillName)
@@ -74,37 +65,30 @@ class ReminderBroadcastReceiver : BroadcastReceiver() {
                 putExtra("REPEAT", true)
             }
 
-            val requestCode =
-                (pillName + DayOfWeek.of(dayOfWeekValue).name + "$hour:$minute").hashCode()
+            val requestCode = makeRequestCode(
+                notificationId,
+                pillName,
+                dayOfWeekValue,
+                hour,
+                minute
+            )
 
-            val pendingIntent = PendingIntent.getBroadcast(
+            val pi = PendingIntent.getBroadcast(
                 context,
                 requestCode,
                 newIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (!alarmManager.canScheduleExactAlarms()) {
-                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                        data = Uri.parse("package:" + context.packageName)
-                    }
-                    context.startActivity(intent)
-                    return
-                }
+            val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val canExact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || am.canScheduleExactAlarms()
+            if (canExact) {
+                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextMillis, pi)
+            } else {
+                am.set(AlarmManager.RTC_WAKEUP, nextMillis, pi)
             }
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                nextAlarmTime.timeInMillis,
-                pendingIntent
-            )
 
-            Log.d(
-                "ReminderReschedule",
-                "Rescheduled next alarm for '$pillName' at $hour:$minute next $dayOfWeekValue"
-            )
-
+            Log.d("ReminderReschedule", "Next alarm for '$pillName' → $hour:$minute (DoW=$dayOfWeekValue) @ $nextMillis")
         }
     }
 }

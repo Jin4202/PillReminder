@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.generativeai)
     implementation(libs.firebase.common.ktx)
     implementation(libs.firebase.database.ktx)
+    implementation(libs.androidx.work.runtime.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

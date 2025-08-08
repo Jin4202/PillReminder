@@ -6,12 +6,13 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.icu.util.Calendar
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
+import java.time.DayOfWeek
 import java.time.LocalDate
+import java.util.Calendar
 
 fun createNotificationChannel(context: Context) {
     val channel = NotificationChannel(
@@ -43,40 +44,30 @@ fun scheduleReminder(context: Context, reminder: Reminder) {
 
     daysOfWeek.forEach { dayOfWeek ->
         times.forEach { time ->
-            val calendar = Calendar.getInstance().apply {
-                val today = LocalDate.now()
-                val startDate = rangeFrom.coerceAtLeast(today)
-                val daysToAdd = (dayOfWeek.value - startDate.dayOfWeek.value + 7) % 7
-                val firstOccurrence = startDate.plusDays(daysToAdd.toLong())
+            val today = LocalDate.now()
+            val startDate = rangeFrom.coerceAtLeast(today)
+            val daysToAdd = (dayOfWeek.value - startDate.dayOfWeek.value + 7) % 7
+            val firstOccurrence = startDate.plusDays(daysToAdd.toLong())
 
-                if (rangeTo != null && firstOccurrence.isAfter(rangeTo)) return@forEach
-
-                set(Calendar.YEAR, firstOccurrence.year)
-                set(Calendar.MONTH, firstOccurrence.monthValue - 1)
-                set(Calendar.DAY_OF_MONTH, firstOccurrence.dayOfMonth)
-                set(Calendar.HOUR_OF_DAY, time.hour)
-                set(Calendar.MINUTE, time.minute)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
+            if (rangeTo != null && firstOccurrence.isAfter(rangeTo)) {
+                return@forEach
             }
 
-            var triggerAtMillis = calendar.timeInMillis
-            val now = System.currentTimeMillis()
+            val triggerAt = nextOccurrenceMillis(dayOfWeek, time.hour, time.minute)
 
-            if (triggerAtMillis <= now) {
-                calendar.add(Calendar.DAY_OF_YEAR, 7)
-                triggerAtMillis = calendar.timeInMillis
-                Log.w("ReminderSchedule", "Past time detected. Rescheduled to next week: $dayOfWeek $time → $triggerAtMillis")
-            }
-
-            val requestCode = (pillName + dayOfWeek.name + time.toString()).hashCode()
+            val requestCode = makeRequestCode(
+                reminderId,
+                pillName,
+                toCalendarDow(dayOfWeek),
+                time.hour,
+                time.minute
+            )
 
             val intent = Intent(intentBase).apply {
-                putExtra("DAY_OF_WEEK", dayOfWeek.value)
+                putExtra("DAY_OF_WEEK", toCalendarDow(dayOfWeek))
                 putExtra("HOUR", time.hour)
                 putExtra("MINUTE", time.minute)
             }
-
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
                 requestCode,
@@ -84,21 +75,14 @@ fun scheduleReminder(context: Context, reminder: Reminder) {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            Log.d("ReminderSchedule", "Scheduled alarm for '$pillName' at $dayOfWeek $time → timeInMillis=${calendar.timeInMillis}")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (!alarmManager.canScheduleExactAlarms()) {
-                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                        data = Uri.parse("package:" + context.packageName)
-                    }
-                    context.startActivity(intent)
-                    return
-                }
+            Log.d("ReminderSchedule", "Scheduled '$pillName' at $dayOfWeek ${time.hour}:${time.minute} → $triggerAt")
+
+            val canExact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()
+            if (canExact) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            } else {
+                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
             }
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
         }
     }
 }
@@ -114,11 +98,17 @@ fun cancelReminder(context: Context, reminder: Reminder) {
     val pillName = reminder.pillName
     val times = reminder.times
     val daysOfWeek = reminder.daysOfWeek
+    val reminderId = reminder.getId()
 
     daysOfWeek.forEach { dayOfWeek ->
         times.forEach { time ->
-            val requestCode = (pillName + dayOfWeek.name + time.toString()).hashCode()
-
+            val requestCode = makeRequestCode(
+                reminderId,
+                pillName,
+                toCalendarDow(dayOfWeek),
+                time.hour,
+                time.minute
+            )
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
                 requestCode,
@@ -130,4 +120,40 @@ fun cancelReminder(context: Context, reminder: Reminder) {
         }
     }
 
+}
+
+fun toCalendarDow(dayOfWeek: DayOfWeek): Int =
+    when (dayOfWeek) {
+        DayOfWeek.SUNDAY -> Calendar.SUNDAY   // 1
+        DayOfWeek.MONDAY -> Calendar.MONDAY
+        DayOfWeek.TUESDAY -> Calendar.TUESDAY
+        DayOfWeek.WEDNESDAY -> Calendar.WEDNESDAY
+        DayOfWeek.THURSDAY -> Calendar.THURSDAY
+        DayOfWeek.FRIDAY -> Calendar.FRIDAY
+        DayOfWeek.SATURDAY -> Calendar.SATURDAY // 7
+    }
+
+fun nextOccurrenceMillis(dow: DayOfWeek, hour: Int, minute: Int, nowMillis: Long = System.currentTimeMillis()): Long {
+    val cal = Calendar.getInstance().apply {
+        timeInMillis = nowMillis
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+        set(Calendar.DAY_OF_WEEK, toCalendarDow(dow))
+        set(Calendar.HOUR_OF_DAY, hour)
+        set(Calendar.MINUTE, minute)
+    }
+    if (cal.timeInMillis <= nowMillis) {
+        cal.add(Calendar.WEEK_OF_YEAR, 1)
+    }
+    return cal.timeInMillis
+}
+
+fun makeRequestCode(
+    reminderId: Int,
+    pillName: String,
+    calDow: Int,
+    hour: Int,
+    minute: Int
+): Int {
+    return "$reminderId#$pillName#$calDow#$hour:$minute".hashCode()
 }
