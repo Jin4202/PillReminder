@@ -1,6 +1,5 @@
 package com.example.pillreminder.screen
 
-import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,9 +24,11 @@ fun ProfileScreen(
     updateData: () -> Unit
 ) {
     val auth = FirebaseAuth.getInstance()
-    var isLoggedIn by remember { mutableStateOf(auth.currentUser != null) }
-    var user by remember { mutableStateOf("username_placeholder") }
-    var email by remember { mutableStateOf("email_placeholder") }
+
+    var currentUser by remember { mutableStateOf(auth.currentUser) }
+    val isLoggedIn = currentUser != null
+    val userName = currentUser?.displayName ?: "Failed to load the information"
+    val email = currentUser?.email ?: "Failed to load the information"
 
     val context = LocalContext.current
 
@@ -39,24 +40,18 @@ fun ProfileScreen(
             text = "My Profile"
         )
         if (isLoggedIn) {
-            user = auth.currentUser?.displayName ?: "Failed to load the information"
-            email = auth.currentUser?.email ?: "Failed to load the information"
-            Text("Name: ${user}!")
-            Text("Connected Email: ${email}")
+            Text("Name: $userName!")
+            Text("Connected Email: $email")
 
             Spacer(modifier = Modifier.padding(10.dp))
 
             Button(onClick = {
                 updateData()
-                Log.d("ProfileTest", "Before: ${FirebaseAuth.getInstance().currentUser?.uid}")
-
                 AuthUI.getInstance()
                     .signOut(context)
-                    .addOnCompleteListener {
-                        isLoggedIn = false
-                        Log.d("ProfileTest", "After: ${FirebaseAuth.getInstance().currentUser?.uid}")
+                    .addOnCompleteListener{
+                        currentUser = FirebaseAuth.getInstance().currentUser
                     }
-                isLoggedIn = false
             }) {
                 Text("Log Out")
             }
@@ -64,8 +59,8 @@ fun ProfileScreen(
         } else {
             SignInScreen(
                 onSignIn = {
-                    isLoggedIn = true
                     loadData()
+                    currentUser = FirebaseAuth.getInstance().currentUser
                 }
             )
         }
