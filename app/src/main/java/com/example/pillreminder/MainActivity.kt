@@ -39,6 +39,7 @@ import com.example.pillreminder.screen.ProfileScreen
 import com.example.pillreminder.screen.ReminderScreen
 import com.example.pillreminder.viewmodel.UserViewModel
 import com.example.pillreminder.viewmodel.UserViewModelFactory
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,11 +87,14 @@ fun NavigationGraph(
         factory = UserViewModelFactory()
     )
     LaunchedEffect(Unit) {
-        viewModel.fetchReminders(context)
-        val manager = ReminderManager.getInstance()
-        manager.loadFromDataStore(context)
-        manager.getReminders().forEach {
-            scheduleReminder(context, it)
+        viewModel.fetchReminders(context) { _ ->
+            launch {
+                val manager = ReminderManager.getInstance()
+                manager.loadFromDataStore(context)
+                manager.getReminders().forEach {
+                    scheduleReminder(context, it)
+                }
+            }
         }
     }
 

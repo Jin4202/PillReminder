@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.example.pillreminder.card.AddPillCard
 import com.example.pillreminder.card.CameraPreviewView
+import com.example.pillreminder.card.LoadingOverlay
 import com.example.pillreminder.model.gemini.GeminiRepository
 import com.example.pillreminder.model.reminder.Reminder
 import kotlinx.coroutines.CoroutineScope
@@ -41,6 +42,7 @@ fun CameraScreen(
     var hasCameraPermission by remember { mutableStateOf(false) }
     var pillInformation by remember { mutableStateOf<Reminder?>(null) }
     var showAddCard by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
     CameraPermissionHandler(onPermissionGranted = {hasCameraPermission = true})
 
@@ -69,8 +71,10 @@ fun CameraScreen(
                             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                                 CoroutineScope(Dispatchers.IO).launch {
                                     val imageBytes = outputFile.readBytes()
+                                    isLoading = true
                                     val newReminder = getPillInformationFromCapturedImage(imageBytes)
                                     pillInformation = newReminder
+                                    isLoading = false
                                     showAddCard = true
                                 }
                             }
@@ -95,6 +99,9 @@ fun CameraScreen(
                 onSaved()
             }
         )
+
+        // Loading on Taking Picture
+        LoadingOverlay(isLoading)
     }
 }
 
