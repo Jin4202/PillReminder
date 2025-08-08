@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "587678791966",
+    "project_id": "pillreminder-12403",
+    "storage_bucket": "pillreminder-12403.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:587678791966:android:a69c8bd18510033597710f",
+        "android_client_info": {
+          "package_name": "com.example.pillreminder"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "587678791966-pd3l4b64ldk037f3fqcbvpt0d5ft33ev.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pillreminder",
+            "certificate_hash": "4168a7ec1132f6709f1407f61469aa5cbeb08db6"
+          }
+        },
+        {
+          "client_id": "587678791966-21ej0qdgf6tsi55nbl153d5t2llhhqp9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAujkw3HSZJ0iAfwW2yTFqFiTzYChbbgCw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "587678791966-21ej0qdgf6tsi55nbl153d5t2llhhqp9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
