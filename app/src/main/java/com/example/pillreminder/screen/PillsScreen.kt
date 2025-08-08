@@ -1,10 +1,12 @@
 package com.example.pillreminder.screen
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,7 +24,7 @@ import java.time.LocalTime
 fun PillsScreen(
     updateData: () -> Unit
 ) {
-    var reminders = ReminderManager.getInstance().getReminders()
+    var reminders by remember { mutableStateOf(ReminderManager.getInstance().getReminders()) }
     var showEditCard by remember { mutableStateOf(false) }
     var selectedReminder by remember { mutableStateOf(Reminder("Not Selected", listOf(LocalTime.of(8,0)), emptySet())) }
     var showAddCard by remember { mutableStateOf(false) }

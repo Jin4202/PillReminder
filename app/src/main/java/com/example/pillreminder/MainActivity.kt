@@ -18,6 +18,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
@@ -86,6 +91,8 @@ fun NavigationGraph(
     val viewModel: UserViewModel = viewModel(
         factory = UserViewModelFactory()
     )
+    var refreshKey by remember { mutableIntStateOf(0) } // 🔹추가
+
     LaunchedEffect(Unit) {
         viewModel.fetchReminders(context) { _ ->
             launch {
@@ -94,6 +101,7 @@ fun NavigationGraph(
                 manager.getReminders().forEach {
                     scheduleReminder(context, it)
                 }
+                refreshKey++
             }
         }
     }
@@ -110,7 +118,8 @@ fun NavigationGraph(
             ReminderScreen(
                 updateData= {
                     viewModel.updateReminders()
-                }
+                },
+                refreshKey= refreshKey
             )
         }
         composable(BottomNavItem.Pills.route) {

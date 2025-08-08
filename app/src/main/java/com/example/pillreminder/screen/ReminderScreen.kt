@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,13 +26,18 @@ import java.time.LocalTime
 
 @Composable
 fun ReminderScreen(
-    updateData: () -> Unit
+    updateData: () -> Unit,
+    refreshKey: Int
 ) {
     var reminders by remember { mutableStateOf(ReminderManager.getInstance().getReminders()) }
     var selectedDayOfWeek by remember { mutableStateOf(LocalDate.now().dayOfWeek) }
     var selectedReminder by remember { mutableStateOf(Reminder("Not Selected", listOf(LocalTime.of(8,0)), emptySet())) }
     var showEditCard by remember { mutableStateOf(false) }
     var showAddCard by remember { mutableStateOf(false) }
+
+    LaunchedEffect(refreshKey) {
+        reminders = ReminderManager.getInstance().getReminders()
+    }
 
     Box(
         modifier = Modifier.fillMaxSize()
