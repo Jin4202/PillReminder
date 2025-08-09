@@ -36,6 +36,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -256,8 +257,8 @@ fun DaySelector(
 fun TimeSelectorColumn(times: MutableList<LocalTime>) {
     val stateList = remember { mutableStateListOf<LocalTime>().apply { addAll(times) } }
     var showDialog by remember { mutableStateOf(false) }
-    var editingIndex by remember { mutableStateOf(-1) }
-    var initialTime by remember { mutableStateOf(LocalTime.of(8, 0)) }
+    var editingIndex by remember { mutableIntStateOf(-1) }
+    var initialTime by remember { mutableStateOf(LocalTime.now()) }
 
     Column {
         stateList.forEachIndexed { index, time ->
@@ -290,7 +291,6 @@ fun TimeSelectorColumn(times: MutableList<LocalTime>) {
 
         Button(onClick = {
             editingIndex = -1
-            initialTime = LocalTime.of(8, 0)
             showDialog = true
         }) {
             Text("+ Add Time")

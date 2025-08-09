@@ -8,7 +8,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -98,7 +97,7 @@ fun NavigationGraph(
         factory = UserViewModelFactory()
     )
     val uiScope = rememberCoroutineScope()
-    var refreshKey by remember { mutableIntStateOf(0) } // 🔹추가
+    var refreshKey by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
         viewModel.fetchReminders(context) { _ ->

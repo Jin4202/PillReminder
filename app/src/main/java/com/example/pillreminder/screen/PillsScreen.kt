@@ -1,17 +1,23 @@
 package com.example.pillreminder.screen
 
-import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.example.pillreminder.card.AddPillButton
 import com.example.pillreminder.card.AddPillCard
 import com.example.pillreminder.card.EditPillCard
@@ -19,6 +25,17 @@ import com.example.pillreminder.card.PillItem
 import com.example.pillreminder.model.reminder.Reminder
 import com.example.pillreminder.model.reminder.ReminderManager
 import java.time.LocalTime
+
+
+enum class PillFilter { ALL, SHORT_TERM, LONG_TERM }
+
+private fun isShortTerm(reminder: Reminder): Boolean {
+    val from = reminder.rangeFrom
+    val to = reminder.rangeTo
+    return from != null && to != null
+}
+
+private fun isLongTerm(reminder: Reminder): Boolean = !isShortTerm(reminder)
 
 @Composable
 fun PillsScreen(
@@ -29,15 +46,40 @@ fun PillsScreen(
     var selectedReminder by remember { mutableStateOf(Reminder("Not Selected", listOf(LocalTime.of(8,0)), emptySet())) }
     var showAddCard by remember { mutableStateOf(false) }
 
+    var filter by remember { mutableStateOf(PillFilter.ALL) }
+
+    val filteredSorted = remember(reminders, filter) {
+        val base = when (filter) {
+            PillFilter.ALL -> reminders
+            PillFilter.SHORT_TERM -> reminders.filter { isShortTerm(it) }
+            PillFilter.LONG_TERM -> reminders.filter { isLongTerm(it) }
+        }
+        base.sortedBy { it.pillName.lowercase() }
+    }
+
     Column (
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
-        LazyColumn {
-            items(reminders) { reminder ->
-                PillItem(reminder, onClick = {
-                    selectedReminder = reminder
-                    showEditCard = true
-                })
+        Text("My Pills")
+        Column {
+            PillFilterSegmented(
+                value = filter,
+                onChange = { filter = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp, bottom = 8.dp)
+            )
+
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(filteredSorted, key = { it.getId() }) { reminder ->
+                    PillItem(
+                        reminder = reminder,
+                        onClick = {
+                            selectedReminder = reminder
+                            showEditCard = true
+                        }
+                    )
+                }
             }
         }
         AddPillButton(onClick = {
@@ -64,5 +106,30 @@ fun PillsScreen(
             updateData()
         }
     )
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PillFilterSegmented(
+    value: PillFilter,
+    onChange: (PillFilter) -> Unit,
+    modifier: Modifier = Modifier,
+    labels: Map<PillFilter, String> = mapOf(
+        PillFilter.ALL to "All",
+        PillFilter.SHORT_TERM to "Limited Term",
+        PillFilter.LONG_TERM to "Long Term"
+    )
+) {
+    val options = listOf(PillFilter.ALL, PillFilter.SHORT_TERM, PillFilter.LONG_TERM)
+
+    SingleChoiceSegmentedButtonRow(modifier = modifier) {
+        options.forEachIndexed { index, option ->
+            SegmentedButton(
+                selected = option == value,
+                onClick = { onChange(option) },
+                shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                label = { Text(labels[option] ?: option.name) }
+            )
+        }
+    }
 }

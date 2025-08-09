@@ -23,7 +23,7 @@ import java.time.LocalTime
 fun AddPillCard(
     defaultReminder: Reminder = Reminder(
         pillName = "",
-        times = listOf(LocalTime.of(8, 0)),
+        times = listOf(LocalTime.now()),
         daysOfWeek = emptySet()
     ),
     showCard: Boolean,

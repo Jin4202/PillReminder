@@ -11,7 +11,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pillreminder.model.reminder.Reminder
-import com.example.pillreminder.model.reminder.ReminderManager
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -23,24 +22,28 @@ fun PillItem(reminder: Reminder, onClick: () -> Unit) {
             .padding(8.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+
             Text(
                 text = reminder.pillName,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
-            for (time in reminder.times) {
+            if (reminder.rangeFrom != null && reminder.rangeTo != null) {
+                val start = reminder.rangeFrom!!.format(DateTimeFormatter.ofPattern("MM-dd-yyyy"))
+                val end = reminder.rangeTo!!.format(DateTimeFormatter.ofPattern("MM-dd-yyyy"))
+
                 Text(
-                    text = "Time: ${ReminderManager.getInstance().getTimeString(time)}",
-                    fontSize = 16.sp
+                    text = "Starting Date: $start",
+                )
+
+                Text(
+                    text = "Ending Date: $end",
+                )
+            } else {
+                Text(
+                    text = "Long-Term Medication / Supplement",
                 )
             }
-
-            Text(
-                text = "Days: ${
-                    reminder.daysOfWeek.joinToString(", ") { it.name.take(3) }
-                }",
-                fontSize = 16.sp
-            )
         }
     }
 }
