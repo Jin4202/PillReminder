@@ -15,6 +15,7 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.example.pillreminder.MainActivity
 import java.time.DayOfWeek
 import java.util.Calendar
 
@@ -29,12 +30,26 @@ class ReminderBroadcastReceiver : BroadcastReceiver() {
 
         Log.d("ReminderTrigger", "Alarm triggered! Pill: $pillName, ID: $notificationId")
 
+        val tapIntent = Intent(context, MainActivity::class.java).apply {
+            putExtra("FROM_NOTIFICATION", true)
+            putExtra("NOTIFICATION_ID", notificationId)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+
+        val contentPendingIntent = PendingIntent.getActivity(
+            context,
+            notificationId,
+            tapIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(context, "pill_reminder_channel")
             .setSmallIcon(R.drawable.ic_dialog_info)
             .setContentTitle("Pill Reminder")
             .setContentText("Time to take your $pillName!")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
+            .setContentIntent(contentPendingIntent)
             .build()
 
         val notificationManager = NotificationManagerCompat.from(context)
