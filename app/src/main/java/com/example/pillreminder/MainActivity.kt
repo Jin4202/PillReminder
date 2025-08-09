@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -20,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -95,11 +97,12 @@ fun NavigationGraph(
     val viewModel: UserViewModel = viewModel(
         factory = UserViewModelFactory()
     )
+    val uiScope = rememberCoroutineScope()
     var refreshKey by remember { mutableIntStateOf(0) } // 🔹추가
 
     LaunchedEffect(Unit) {
         viewModel.fetchReminders(context) { _ ->
-            launch {
+            uiScope.launch {
                 val manager = ReminderManager.getInstance()
                 manager.loadFromDataStore(context)
                 manager.getReminders().forEach {
