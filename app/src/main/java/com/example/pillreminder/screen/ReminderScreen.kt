@@ -30,7 +30,7 @@ fun ReminderScreen(
     refreshKey: Int
 ) {
     var reminders by remember { mutableStateOf(ReminderManager.getInstance().getReminders()) }
-    var selectedDayOfWeek by remember { mutableStateOf(LocalDate.now().dayOfWeek) }
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var selectedReminder by remember { mutableStateOf(Reminder("Not Selected", listOf(LocalTime.of(8,0)), emptySet())) }
     var showEditCard by remember { mutableStateOf(false) }
     var showAddCard by remember { mutableStateOf(false) }
@@ -43,9 +43,23 @@ fun ReminderScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            CalendarComponent(onSelectedDayChange = { selectedDayOfWeek = it })
+            CalendarComponent(
+                onDateSelected = { date ->
+                    selectedDate = date
+                },
+            )
             LazyColumn {
-                val filteredReminders = reminders.filter { it.daysOfWeek.contains(selectedDayOfWeek) }
+                val filteredReminders = reminders.filter { reminder ->
+                    val isDayMatch = reminder.daysOfWeek.contains(selectedDate.dayOfWeek)
+                    var isDateInRange = true
+                    if (reminder.rangeFrom != null && reminder.rangeTo != null) {
+                        val fromDate = reminder.rangeFrom ?: selectedDate
+                        val toDate = reminder.rangeTo ?: selectedDate.plusYears(100)
+                        isDateInRange = selectedDate.isEqual(fromDate) || (selectedDate.isAfter(fromDate) && selectedDate.isBefore(toDate))
+                    }
+
+                    isDayMatch && isDateInRange
+                }
                 items(filteredReminders) { reminder ->
                     ReminderItem(reminder, onClick = {
                         selectedReminder = reminder

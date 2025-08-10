@@ -29,16 +29,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.pillreminder.model.reminder.ReminderManager
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.Month
 import java.time.YearMonth
 import kotlin.text.lowercase
 import kotlin.text.replaceFirstChar
 import kotlin.text.uppercase
 
 @Composable
-fun CalendarComponent(onSelectedDayChange: (DayOfWeek) -> Unit) {
+fun CalendarComponent(
+    onDateSelected: (LocalDate) -> Unit
+) {
     var selectedYear by remember { mutableIntStateOf(YearMonth.now().year) }
     var selectedMonth by remember { mutableStateOf(YearMonth.now().month) }
     var selectedDay by remember { mutableIntStateOf(LocalDate.now().dayOfMonth) }
@@ -67,14 +69,28 @@ fun CalendarComponent(onSelectedDayChange: (DayOfWeek) -> Unit) {
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(onClick = { selectedMonth = selectedMonth.minus(1) }) {
+            Button(onClick = {
+                if (selectedMonth == Month.JANUARY) {
+                    selectedYear.minus(1)
+                }
+                selectedMonth = selectedMonth.minus(1)
+                selectedDay = YearMonth.of(selectedYear, selectedMonth).lengthOfMonth()
+                onDateSelected(LocalDate.of(selectedYear, selectedMonth, selectedDay))
+            }) {
                 Text("<")
             }
             Text(
                 text = "${selectedMonth.name.lowercase().replaceFirstChar { it.uppercase() }} $selectedYear",
                 style = MaterialTheme.typography.titleLarge
             )
-            Button(onClick = { selectedMonth = selectedMonth.plus(1) }) {
+            Button(onClick = {
+                if (selectedMonth == Month.DECEMBER) {
+                    selectedYear.plus(1)
+                }
+                selectedMonth = selectedMonth.plus(1)
+                selectedDay = YearMonth.of(selectedYear, selectedMonth).lengthOfMonth()
+                onDateSelected(LocalDate.of(selectedYear, selectedMonth, selectedDay))
+            }) {
                 Text(">")
             }
         }
@@ -94,7 +110,7 @@ fun CalendarComponent(onSelectedDayChange: (DayOfWeek) -> Unit) {
                     isSelected = selectedDay == day,
                     onClick = {
                         selectedDay = day
-                        onSelectedDayChange(date.dayOfWeek)
+                        onDateSelected(LocalDate.of(selectedYear, selectedMonth, selectedDay))
                     },
                     sizeOfDayItem = sizeOfDayItem
                 )
