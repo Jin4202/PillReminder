@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "587678791966-lqipctnat1qg407ningaoh9ustlf8k50.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pillreminder",
+            "certificate_hash": "9338ec382172a908481e1831105d76cf2135f379"
+          }
+        },
+        {
           "client_id": "587678791966-pd3l4b64ldk037f3fqcbvpt0d5ft33ev.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

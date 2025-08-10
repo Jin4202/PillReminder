@@ -177,7 +177,7 @@ fun PillInformationCardBase(
         }
 
         // Display the invalid date alert
-        if (isDateInvalid) {
+        if (isRange && isDateInvalid) {
             Text(
                 text = "The ending date cannot be before the starting date.",
                 color = Color.Red,
@@ -201,6 +201,13 @@ fun PillInformationCardBase(
 
             Button(
                 onClick = {
+                    // Save the new reminder
+
+                    // Check if date range should be applied
+                    if (!isRange) {
+                        rangeFrom = null
+                        rangeTo = null
+                    }
                     val newReminder = Reminder(
                         pillName = pillName,
                         times = times,
@@ -214,7 +221,7 @@ fun PillInformationCardBase(
                         initialReminder.getId(),
                         newReminder
                     )},
-                enabled = !isDateInvalid && isDaySelected
+                enabled = !(isRange && isDateInvalid) && isDaySelected
             ) { Text(confirmButtonText) }
         }
     }
