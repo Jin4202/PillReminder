@@ -74,7 +74,10 @@ fun CalendarComponent(
                     selectedYear.minus(1)
                 }
                 selectedMonth = selectedMonth.minus(1)
-                selectedDay = YearMonth.of(selectedYear, selectedMonth).lengthOfMonth()
+                val lastDayOfMonth = YearMonth.of(selectedYear, selectedMonth).lengthOfMonth()
+                if (selectedDay > lastDayOfMonth) {
+                    selectedDay = lastDayOfMonth
+                }
                 onDateSelected(LocalDate.of(selectedYear, selectedMonth, selectedDay))
             }) {
                 Text("<")
@@ -88,7 +91,10 @@ fun CalendarComponent(
                     selectedYear.plus(1)
                 }
                 selectedMonth = selectedMonth.plus(1)
-                selectedDay = YearMonth.of(selectedYear, selectedMonth).lengthOfMonth()
+                val lastDayOfMonth = YearMonth.of(selectedYear, selectedMonth).lengthOfMonth()
+                if (selectedDay > lastDayOfMonth) {
+                    selectedDay = lastDayOfMonth
+                }
                 onDateSelected(LocalDate.of(selectedYear, selectedMonth, selectedDay))
             }) {
                 Text(">")
