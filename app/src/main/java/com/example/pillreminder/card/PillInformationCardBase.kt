@@ -78,6 +78,9 @@ fun PillInformationCardBase(
     var usageText by remember { mutableStateOf(initialReminder.usage) }
     var cautionsText by remember { mutableStateOf(initialReminder.cautions) }
 
+    var isDateInvalid by remember { mutableStateOf(false) }
+    var isDaySelected by remember { mutableStateOf(selectedDays.isNotEmpty()) }
+
     val textFieldMaxLines = 5
 
     Column(
@@ -117,8 +120,18 @@ fun PillInformationCardBase(
             selectedDays = selectedDays,
             onDayToggle = { day ->
                 selectedDays = if (selectedDays.contains(day)) selectedDays - day else selectedDays + day
+                isDaySelected = selectedDays.isNotEmpty()
             }
         )
+
+        if (!isDaySelected) {
+            Text(
+                text = "Please select at least one day.",
+                color = Color.Red,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
 
         // TimeSelector [8:00, 10:00, 12:00]
         TimeSelectorColumn(
@@ -156,7 +169,20 @@ fun PillInformationCardBase(
                 label = "To",
                 contentDescription = "Select End Date",
                 selectedDate = rangeTo,
-                onDateSelected = { rangeTo = it }
+                onDateSelected = {
+                    rangeTo = it
+                    isDateInvalid = rangeFrom != null && rangeTo!!.isBefore(rangeFrom)
+                }
+            )
+        }
+
+        // Display the invalid date alert
+        if (isDateInvalid) {
+            Text(
+                text = "The ending date cannot be before the starting date.",
+                color = Color.Red,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
 
@@ -173,21 +199,23 @@ fun PillInformationCardBase(
         ) {
             Button(onClick = onDismiss) { Text("Cancel") }
 
-            Button(onClick = {
-                val newReminder = Reminder(
-                    pillName = pillName,
-                    times = times,
-                    daysOfWeek = selectedDays.toSet(),
-                    rangeFrom = rangeFrom,
-                    rangeTo = rangeTo,
-                    usage = usageText,
-                    cautions = cautionsText
-                )
-                onConfirm(
-                    initialReminder.getId(),
-                    newReminder
-                )
-            }) { Text(confirmButtonText) }
+            Button(
+                onClick = {
+                    val newReminder = Reminder(
+                        pillName = pillName,
+                        times = times,
+                        daysOfWeek = selectedDays.toSet(),
+                        rangeFrom = rangeFrom,
+                        rangeTo = rangeTo,
+                        usage = usageText,
+                        cautions = cautionsText
+                    )
+                    onConfirm(
+                        initialReminder.getId(),
+                        newReminder
+                    )},
+                enabled = !isDateInvalid && isDaySelected
+            ) { Text(confirmButtonText) }
         }
     }
 }
@@ -359,7 +387,6 @@ fun DateTextField(
     onDateSelected: (LocalDate) -> Unit
 ) {
     var showPicker by remember { mutableStateOf(false) }
-
     val formattedDate = selectedDate?.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")) ?: ""
 
     OutlinedTextField(
