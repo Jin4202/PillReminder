@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
@@ -30,7 +31,7 @@ fun EditPillCard(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.3f))
+                .background(Color.Black.copy(alpha = 0.38f))
                 .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
                     onDismiss()
                 }
@@ -40,10 +41,14 @@ fun EditPillCard(
                     .align(Alignment.Center)
                     .padding(16.dp)
                     .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {},
-                elevation = CardDefaults.cardElevation(8.dp)
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.Transparent
+                ),
+                elevation = CardDefaults.cardElevation(12.dp)
             ) {
                 PillInformationCardBase(
-                    cardTitle = "Edit Pill Reminder",
+                    cardTitle = "Edit Medication",
                     initialReminder = reminder,
                     onDismiss = onDismiss,
                     confirmButtonText = "Save",
