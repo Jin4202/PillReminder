@@ -11,8 +11,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +44,7 @@ import com.example.pillreminder.screen.CameraScreen
 import com.example.pillreminder.screen.PillsScreen
 import com.example.pillreminder.screen.ProfileScreen
 import com.example.pillreminder.screen.ReminderScreen
+import com.example.pillreminder.ui.theme.PillReminderTheme
 import com.example.pillreminder.viewmodel.UserViewModel
 import com.example.pillreminder.viewmodel.UserViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
@@ -59,7 +63,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            MainScreen()
+            PillReminderTheme {
+                MainScreen()
+            }
             //TestReminderButton(this)
         }
     }
@@ -78,6 +84,7 @@ fun MainScreen() {
     val navController = rememberNavController()
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = { BottomNavigationBar(navController = navController) }
     ) { paddingValues ->
         NavigationGraph(
