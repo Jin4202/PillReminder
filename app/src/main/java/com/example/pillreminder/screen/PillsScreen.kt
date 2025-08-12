@@ -1,27 +1,35 @@
 package com.example.pillreminder.screen
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.pillreminder.card.AddPillButton
 import com.example.pillreminder.card.AddPillCard
 import com.example.pillreminder.card.EditPillCard
+import com.example.pillreminder.card.LabeledDivider
 import com.example.pillreminder.card.PillItem
+import com.example.pillreminder.card.SectionCard
 import com.example.pillreminder.model.reminder.Reminder
 import com.example.pillreminder.model.reminder.ReminderManager
 import java.time.LocalTime
@@ -48,46 +56,79 @@ fun PillsScreen(
 
     var filter by remember { mutableStateOf(PillFilter.ALL) }
 
-    val filteredSorted = remember(reminders, filter) {
-        val base = when (filter) {
-            PillFilter.ALL -> reminders
-            PillFilter.SHORT_TERM -> reminders.filter { isShortTerm(it) }
-            PillFilter.LONG_TERM -> reminders.filter { isLongTerm(it) }
+    val filteredSorted by remember(reminders, filter) {
+        derivedStateOf {
+            val base = when (filter) {
+                PillFilter.ALL -> reminders
+                PillFilter.SHORT_TERM -> reminders.filter(::isShortTerm)
+                PillFilter.LONG_TERM -> reminders.filter(::isLongTerm)
+            }
+            base.sortedBy { it.pillName.lowercase() }
         }
-        base.sortedBy { it.pillName.lowercase() }
     }
+
 
     Column (
         modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
-        Text("My Pills")
-        Column {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                "Meds & Supplements",
+                style = MaterialTheme.typography.titleLarge
+            )
             PillFilterSegmented(
                 value = filter,
-                onChange = { filter = it },
+                onChange = { new -> filter = new },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp, bottom = 8.dp)
+                    .padding(top = 12.dp)
             )
+        }
 
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(filteredSorted, key = { it.getId() }) { reminder ->
-                    PillItem(
-                        reminder = reminder,
-                        onClick = {
-                            selectedReminder = reminder
-                            showEditCard = true
-                        }
+        Spacer(Modifier.height(12.dp))
+        LabeledDivider(label = "Medications / Supplements")
+        Spacer(Modifier.height(12.dp))
+
+        SectionCard {
+            if (filteredSorted.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No pills found for this filter",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                ) {
+                    items(filteredSorted) { reminder ->
+                        PillItem(
+                            reminder = reminder,
+                            onClick = {
+                                selectedReminder = reminder
+                                showEditCard = true
+                            }
+                        )
+                    }
+                    item { Spacer(Modifier.height(8.dp)) }
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            AddPillButton { showAddCard = true }
+                        }
+                    }
                 }
             }
         }
-        AddPillButton(onClick = {
-            showAddCard = true
-        })
     }
-
-    EditPillCard (
+    EditPillCard(
         reminder = selectedReminder,
         showCard = showEditCard,
         onDismiss = { showEditCard = false },
@@ -116,8 +157,8 @@ fun PillFilterSegmented(
     modifier: Modifier = Modifier,
     labels: Map<PillFilter, String> = mapOf(
         PillFilter.ALL to "All",
-        PillFilter.SHORT_TERM to "Limited Term",
-        PillFilter.LONG_TERM to "Long Term"
+        PillFilter.SHORT_TERM to "Course",
+        PillFilter.LONG_TERM to "Ongoing"
     )
 ) {
     val options = listOf(PillFilter.ALL, PillFilter.SHORT_TERM, PillFilter.LONG_TERM)
@@ -128,7 +169,18 @@ fun PillFilterSegmented(
                 selected = option == value,
                 onClick = { onChange(option) },
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
-                label = { Text(labels[option] ?: option.name) }
+                colors = SegmentedButtonDefaults.colors(
+                    activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    inactiveContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    inactiveContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                label = {
+                    Text(
+                        labels[option] ?: option.name,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
             )
         }
     }
