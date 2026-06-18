@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter
 
 class GeminiRepository() {
     suspend fun analyzeImage(imageBytes: ByteArray): Reminder? {
-        val defaultDosageTime = listOf(LocalTime.of(8,30))
+        val defaultDosageTime = listOf(LocalTime.now())
 
         val generativeModel = GenerativeModel(
             modelName = "gemini-2.0-flash-lite",
@@ -97,7 +97,7 @@ fun parseStringToTime(timesString: List<String>): List<LocalTime> {
         } catch (e: Exception) {
             null
         }
-    }.ifEmpty { listOf(LocalTime.of(8, 30)) }
+    }.ifEmpty { listOf(LocalTime.now()) }
 }
 
 

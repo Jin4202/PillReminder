@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
@@ -13,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.pillreminder.model.reminder.Reminder
 import com.example.pillreminder.model.reminder.ReminderManager
@@ -24,12 +26,12 @@ fun EditPillCard(
     onDismiss: () -> Unit,
     onUpdate: () -> Unit
 ) {
-
+    val context = LocalContext.current
     if (showCard) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.3f))
+                .background(Color.Black.copy(alpha = 0.38f))
                 .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
                     onDismiss()
                 }
@@ -39,19 +41,23 @@ fun EditPillCard(
                     .align(Alignment.Center)
                     .padding(16.dp)
                     .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {},
-                elevation = CardDefaults.cardElevation(8.dp)
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.Transparent
+                ),
+                elevation = CardDefaults.cardElevation(12.dp)
             ) {
                 PillInformationCardBase(
-                    cardTitle = "Edit Pill Reminder",
+                    cardTitle = "Edit Medication",
                     initialReminder = reminder,
                     onDismiss = onDismiss,
                     confirmButtonText = "Save",
                     onConfirm = { id, newReminder ->
-                        ReminderManager.getInstance().updateReminder(id, newReminder)
+                        ReminderManager.getInstance().updateReminder(context, id, newReminder)
                         onUpdate()
                     },
                     onDelete = {
-                        ReminderManager.getInstance().removeReminder(reminder)
+                        ReminderManager.getInstance().removeReminder(context, reminder)
                         onUpdate()
                     }
                 )

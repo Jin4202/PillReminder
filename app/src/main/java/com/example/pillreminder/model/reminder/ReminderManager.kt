@@ -1,6 +1,14 @@
 package com.example.pillreminder.model.reminder
 
+import android.content.Context
 import android.util.Log
+import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
+import com.example.pillreminder.model.db.ReminderSerializer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.util.Locale
 
@@ -22,18 +30,32 @@ class ReminderManager private constructor() {
         return reminders.toList()
     }
 
-    fun addReminder(reminder: Reminder) {
+    fun addReminder(context: Context, reminder: Reminder) {
         reminders.add(reminder)
+        scheduleReminder(context, reminder)
+        CoroutineScope(Dispatchers.IO).launch {
+            saveToDataStore(context)
+        }
     }
 
-    fun removeReminder(reminder: Reminder) {
+    fun removeReminder(context: Context, reminder: Reminder) {
         reminders.remove(reminder)
+        cancelReminder(context, reminder)
+        CoroutineScope(Dispatchers.IO).launch {
+            saveToDataStore(context)
+        }
     }
 
-    fun updateReminder(id: Int, newReminder: Reminder) {
-        val index = reminders.indexOfFirst { it.getId() == id }
+    fun updateReminder(context: Context, oldReminderId: Int, newReminder: Reminder) {
+        val index = reminders.indexOfFirst { it.getId() == oldReminderId }
         if (index != -1) {
+            val oldReminder = reminders[index]
+            cancelReminder(context, oldReminder)
             reminders[index] = newReminder
+            scheduleReminder(context, newReminder)
+            CoroutineScope(Dispatchers.IO).launch {
+                saveToDataStore(context)
+            }
         }
     }
 
@@ -44,7 +66,7 @@ class ReminderManager private constructor() {
         return "$hour:$minute $period"
     }
 
-    fun addReminderFromDTO(dto: ReminderDTO): Boolean {
+    fun addReminderFromDTO(context: Context, dto: ReminderDTO): Boolean {
         return try {
             val reminder = DTOUtils.toReminder(dto)
             var isAdded = false
@@ -54,7 +76,7 @@ class ReminderManager private constructor() {
                 }
             }
             if (!isAdded) {
-                reminders.add(reminder)
+                addReminder(context, reminder)
             }
             true
         } catch (e: Exception) {
@@ -66,4 +88,23 @@ class ReminderManager private constructor() {
     fun getReminderDTOList(): List<ReminderDTO> {
         return reminders.map { DTOUtils.toDTO(it) }
     }
+
+    suspend fun saveToDataStore(context: Context) {
+        context.reminderDataStore.updateData {
+            ReminderList.newBuilder()
+                .addAllReminders(reminders.map { ReminderProtoUtils.toProto(it) })
+                .build()
+        }
+    }
+
+    suspend fun loadFromDataStore(context: Context) {
+        val reminderList = context.reminderDataStore.data.first()
+        reminders.clear()
+        reminders.addAll(reminderList.remindersList.map { ReminderProtoUtils.fromProto(it) })
+    }
 }
+
+val Context.reminderDataStore: DataStore<ReminderList> by dataStore(
+    fileName = "reminders.pb",
+    serializer = ReminderSerializer
+)

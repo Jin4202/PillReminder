@@ -4,8 +4,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-
     id("com.google.gms.google-services")
+    id("com.google.protobuf")
 }
 
 android {
@@ -53,7 +53,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -75,6 +74,7 @@ dependencies {
     implementation(libs.generativeai)
     implementation(libs.firebase.common.ktx)
     implementation(libs.firebase.database.ktx)
+    implementation(libs.androidx.work.runtime.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -91,4 +91,23 @@ dependencies {
 
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.ui.auth)
+
+    implementation (libs.androidx.datastore)
+    implementation (libs.androidx.datastore.core)
+    implementation (libs.protobuf.javalite)
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.24.0"
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") {
+                    option("lite")
+                }
+            }
+        }
+    }
 }

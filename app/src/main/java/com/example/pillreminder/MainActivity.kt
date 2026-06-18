@@ -8,21 +8,25 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -32,8 +36,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.pillreminder.model.nav.BottomNavItem
 import com.example.pillreminder.card.BottomNavigationBar
-import com.example.pillreminder.model.db.UserRepository
-import com.example.pillreminder.model.reminder.Reminder
 import com.example.pillreminder.model.reminder.ReminderBroadcastReceiver
 import com.example.pillreminder.model.reminder.ReminderManager
 import com.example.pillreminder.model.reminder.createNotificationChannel
@@ -42,61 +44,30 @@ import com.example.pillreminder.screen.CameraScreen
 import com.example.pillreminder.screen.PillsScreen
 import com.example.pillreminder.screen.ProfileScreen
 import com.example.pillreminder.screen.ReminderScreen
+import com.example.pillreminder.ui.theme.PillReminderTheme
 import com.example.pillreminder.viewmodel.UserViewModel
 import com.example.pillreminder.viewmodel.UserViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import java.time.DayOfWeek
-import java.time.LocalTime
-//
-//val sampleDailyReminder1 = Reminder(
-//    pillName = "Vitamin A",
-//    times = listOf(LocalTime.of(10, 30)),
-//    daysOfWeek = DayOfWeek.entries.toSet(),
-//    cautions = "Do not take with alcohol"
-//)
-//
-//val sampleDailyReminder2 = Reminder(
-//    pillName = "Vitamin B",
-//    times = listOf(LocalTime.of(9, 0)),
-//    daysOfWeek = DayOfWeek.entries.toSet(),
-//    cautions = "Do not take with alcohol"
-//)
-//
-//val sampleDailyReminder3 = Reminder(
-//    pillName = "Vitamin C",
-//    times = listOf(LocalTime.of(16, 0)),
-//    daysOfWeek = DayOfWeek.entries.toSet(),
-//    cautions = "Do not take with alcohol"
-//)
-//
-//val sampleWeeklyReminder = Reminder(
-//    pillName = "Aspirin",
-//    times = listOf(LocalTime.of(12, 0)),
-//    daysOfWeek = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
-//    cautions = "Do not take with alcohol"
-//)
-//
-//val reminders = listOf(sampleDailyReminder1, sampleDailyReminder2, sampleDailyReminder3, sampleWeeklyReminder)
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private lateinit var auth: FirebaseAuth
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        auth = Firebase.auth
         requestNotificationPermission()
         createNotificationChannel(this)
         enableEdgeToEdge()
 
         setContent {
-//            reminders.forEachIndexed { index, reminder ->
-//                scheduleReminder(this, reminder.pillName, reminder.times, reminder.daysOfWeek, index)
-//            }
-//            for (reminder in reminders) {
-//                ReminderManager.getInstance().addReminder(reminder)
-//            }
-            MainScreen()
+            PillReminderTheme {
+                MainScreen()
+            }
             //TestReminderButton(this)
         }
-        createNotificationChannel(this)
     }
 
     private fun requestNotificationPermission() {
@@ -113,6 +84,7 @@ fun MainScreen() {
     val navController = rememberNavController()
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = { BottomNavigationBar(navController = navController) }
     ) { paddingValues ->
         NavigationGraph(
@@ -127,19 +99,25 @@ fun NavigationGraph(
     navController: NavHostController,
     modifier: Modifier
 ) {
-    val db = FirebaseFirestore.getInstance()
-    val auth = FirebaseAuth.getInstance()
-    var userId by remember { mutableStateOf(auth.currentUser?.uid ?: "") }
+    val context = LocalContext.current
     val viewModel: UserViewModel = viewModel(
-        factory = UserViewModelFactory(db, userId)
+        factory = UserViewModelFactory()
     )
-//    Log.d("UserIDTest", "User ID on Create: ${userId}")
+    val uiScope = rememberCoroutineScope()
+    var refreshKey by remember { mutableIntStateOf(0) }
+
     LaunchedEffect(Unit) {
-        if (userId.isNotEmpty()) {
-            viewModel.fetchReminders()
+        viewModel.fetchReminders(context) { _ ->
+            uiScope.launch {
+                val manager = ReminderManager.getInstance()
+                manager.loadFromDataStore(context)
+                manager.getReminders().forEach {
+                    scheduleReminder(context, it)
+                }
+                refreshKey++
+            }
         }
     }
-
 
     NavHost(navController, startDestination = BottomNavItem.Main.route, modifier = modifier) {
         composable(BottomNavItem.Camera.route) {
@@ -152,33 +130,25 @@ fun NavigationGraph(
         composable(BottomNavItem.Main.route) {
             ReminderScreen(
                 updateData= {
-                    if (userId.isNotEmpty()) {
-                        viewModel.updateReminders()
-                    }
-                }
+                    viewModel.updateReminders()
+                },
+                refreshKey= refreshKey
             )
         }
         composable(BottomNavItem.Pills.route) {
             PillsScreen(
                 updateData= {
-                    if (userId.isNotEmpty()) {
-                        viewModel.updateReminders()
-                    }
+                    viewModel.updateReminders()
                 }
             )
         }
         composable(BottomNavItem.Profile.route) {
             ProfileScreen(
-                auth = auth,
                 loadData = {
-                    if (userId.isNotEmpty()) {
-                        viewModel.fetchReminders()
-                    }
+                    viewModel.fetchReminders(context)
                 },
                 updateData = {
-                    if (userId.isNotEmpty()) {
-                        viewModel.updateReminders()
-                    }
+                    viewModel.updateReminders()
                 }
             )
         }

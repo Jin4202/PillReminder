@@ -11,6 +11,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 sealed class BottomNavItem(val title: String, val icon: ImageVector, val route: String) {
     object Camera : BottomNavItem("Camera", Icons.Filled.Camera, "camera")
     object Main : BottomNavItem("Main", Icons.Filled.Home, "main")
-    object Pills : BottomNavItem("Pills", Icons.AutoMirrored.Filled.List, "pills")
+    object Pills : BottomNavItem("Meds", Icons.AutoMirrored.Filled.List, "pills")
     object Profile : BottomNavItem("Profile", Icons.Filled.Person, "profile")
 }
